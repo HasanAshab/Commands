@@ -1,5 +1,5 @@
 import { Command } from "./Command";
-import { NodeArtisanConfig } from "./interfaces/NodeArtisanConfig";
+import { SamerArtisanConfig } from "./interfaces/SamerArtisanConfig";
 import { parseArguments, parseDescriptions } from "./utils/parser";
 import { consoleError } from "./utils/console";
 import { join, dirname } from "path";
@@ -9,7 +9,7 @@ import { textSync } from "figlet";
 import { yellow, green, bgRed } from "chalk";
 
 
-export class NodeArtisan {
+export class SamerArtisan {
   /**
    * Global options that available on all commands
   */
@@ -21,8 +21,8 @@ export class NodeArtisan {
   /**
    * Default Config of Node Artisan
   */
-  static $config: NodeArtisanConfig = {
-    name: "NodeArtisan",
+  static $config: SamerArtisanConfig = {
+    name: "SamerArtisan",
     root: process.cwd(),
     cacheDist: "node-artisan.json",
     load: [],
@@ -32,7 +32,7 @@ export class NodeArtisan {
   /**
    * Setup node artisan
   */
-  static setup(config: Partial<NodeArtisanConfig>) {
+  static setup(config: Partial<SamerArtisanConfig>) {
     Object.assign(this.$config, config);
   }
   

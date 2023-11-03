@@ -1,8 +1,5 @@
 import { parseArguments, parseDescriptions } from '../src/utils/parser';
 
-class TooManyArguments {}
-class TooFewArguments {}
-
 // Argument
 it('Should parse args', () => {
   const sign = '{a} {b}';

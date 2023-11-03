@@ -1,4 +1,4 @@
-export interface NodeArtisanConfig {
+export interface SamerArtisanConfig {
   /**
    * Name of the CLI
   */

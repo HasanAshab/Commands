@@ -1,3 +1,3 @@
-export * from "./NodeArtisan";
+export * from "./SamerArtisan";
 export * from "./Command";
-export * from "./interfaces/NodeArtisanConfig";
+export * from "./interfaces/SamerArtisanConfig";
