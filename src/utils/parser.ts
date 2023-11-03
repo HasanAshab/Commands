@@ -158,7 +158,7 @@ export function parseDescriptions(signature) {
       //looping thought the current signature for parsing the argument
       while (i < signature.length && signature[i] !== '}') {
         if (validKeys.test(signature[i])) key += signature[i];
-        else if (signature[i] === '|') key = '';
+        else if (signature[i] === '|') key = `-${key}, `;
         else if (signature[i] === ':') {
           let desc = '';
           while (signature[++i] !== '}') desc += signature[i];
