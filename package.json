@@ -1,6 +1,6 @@
 {
-  "name": "node-artisan",
-  "version": "0.0.1",
+  "name": "samer-artisan",
+  "version": "0.0.2",
   "description": "Command Line Interface for Nodejs. inspired by Artisan (PHP)",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -9,19 +9,23 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/HasanAshab/node-artisan.git"
+    "url": "git+https://github.com/HasanAshab/samer-artisan.git"
   },
   "keywords": [
+    "samer-artisan",
     "cli",
-    "artisan"
+    "artisan",
+    "commander"
   ],
-  "author": "haoronaldo.18@gmail.com",
+  "author": "hasanashab.18205@gmail.com",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/HasanAshab/node-artisan/issues"
+    "url": "https://github.com/HasanAshab/samer-artisan/issues"
   },
-  "homepage": "https://github.com/HasanAshab/node-artisan#readme",
-  "files": ["lib/**/*"],
+  "homepage": "https://github.com/HasanAshab/samer-artisan#readme",
+  "files": [
+    "lib/**/*"
+  ],
   "dependencies": {
     "chalk": "^4.1.2",
     "cli-progress": "^3.12.0",

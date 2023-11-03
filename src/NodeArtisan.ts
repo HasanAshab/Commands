@@ -106,29 +106,25 @@ export class NodeArtisan {
   /**
    * Get command class from path
   */
-  static async $getCommandClass(path: string) {
+  static async $getCommand(path: string): Promise<Command> {
     const fileData = await import(path);
-    const Command = typeof fileData === "function"
+    const CommandClass = typeof fileData === "function"
       ? fileData
       : fileData.default;
-    if(typeof Command !== "function")
-      throw new Error(`No command class found from path: "${path}"`);
-    return Command;
+    if(typeof CommandClass !== "function")
+      consoleError(`No command class found from path: "${path}"`);
+    return new CommandClass;
   }
   
-  static $checkCoreCommand(base: string) {
-    if(base === "list")
-      this.showCommandList();
-    else if(base === "cache")
-      this.cacheCommands();
-  }
- 
   /**
    * Get all registered command classes
   */
-  static $getCommands() {
-    const commandPaths = [ ...this.$config.commands.map(path => this.$resolvePath(path)), ...this.$getCacheCommands() ];
-    const importPromises = commandPaths.map(path => this.$getCommandClass(path))
+  static $getCommands(): Promise<Command[]> {
+    const commandPaths = this.$config.commands.map(path => this.$resolvePath(path));
+    if(this.$config.load.length > 0) {
+      commandPaths.push(...this.$getCacheCommands());
+    }
+    const importPromises = commandPaths.map(path => this.$getCommand(path))
     return Promise.all(importPromises);
   }
   
@@ -167,13 +163,15 @@ export class NodeArtisan {
    * Call a command by base
   */
   static async call(base: string, input: string[] = []) {
-    this.$checkCoreCommand(base);
+    if(base === "list")
+      return await this.showCommandList();
+    if(base === "cache")
+      return await this.cacheCommands();
     
-    const Commands = await this.$getCommands();
+    const commands = await this.$getCommands();
     const similarCommands: Record<string, Command> = {};
     
-    for(const Command of Commands) {
-      const command = new Command();
+    for(const command of commands) {
       if(command.base === base)
         return await this.exec(command, input);
       else if (command.base.startsWith(base))
@@ -208,9 +206,8 @@ export class NodeArtisan {
   */
   static async showCommandList() {
     console.log("Available Commands:\n");
-    const Commands = await this.$getCommands();
-    Commands.forEach(Command => {
-      const command = new Command();
+    const commands = await this.$getCommands();
+    commands.forEach((command: Command) => {
       const padding = ' '.repeat(30 - command.base.length);
       console.log(`  ${green(command.base)}${padding}${command.description}`);
     });
@@ -244,20 +241,20 @@ export class NodeArtisan {
   /**
    * Cache commands path from load dir
   */
-  static cacheCommands() {
+  static async cacheCommands() {
     const absoluteCacheDist = this.$resolvePath(this.$config.cacheDist);
     const paths: string[] = [];
-    this.$config.load.forEach(dir => {
-      readdirSync(this.$resolvePath(dir)).filter(fileName => fileName.endsWith(".js")).forEach((fileName: string) => {
+    for(const dir of this.$config.load) {
+      const files = readdirSync(this.$resolvePath(dir));
+      for(const fileName of files) {
+        if(!fileName.endsWith(".js")) continue;
         const fullPath = this.$resolvePath(dir, fileName);
-        const CommandClass = require(fullPath);
-        if(typeof CommandClass === "function" && CommandClass.prototype instanceof Command) {
-          if(!new CommandClass().signature)
-            throw new Error(`Signature required in command: "${join(dir, fileName)}"`);
-          paths.push(fullPath)
-        }
-      });
-    });
+        const command = await this.$getCommand(fullPath);
+        if(!command.signature)
+          consoleError(`Signature required in command: "${join(dir, fileName)}"`);
+        paths.push(fullPath)
+      }
+    }
     mkdirSync(dirname(absoluteCacheDist), { recursive: true })
     writeFileSync(absoluteCacheDist, JSON.stringify(paths));
     process.exit(0);
