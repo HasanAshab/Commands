@@ -194,7 +194,7 @@ export class SamerArtisan {
   */
   static parse(args = process.argv) {
     const [baseInput, ...argsAndOpts] = args.splice(2);
-    if(baseInput) {
+    if(baseInput && baseInput !== "--help" && baseInput !== "-h") {
       return this.call(baseInput, argsAndOpts)
     }
     console.log(textSync(this.$config.name), "\n\n");
