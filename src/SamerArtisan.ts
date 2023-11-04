@@ -8,7 +8,6 @@ import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
 import { yellow, green, bgRed } from "chalk";
 
-
 export class SamerArtisan {
   /**
    * Global options that available on all commands
@@ -26,7 +25,10 @@ export class SamerArtisan {
     root: process.cwd(),
     cacheDist: "node-artisan.json",
     load: [],
-    commands: []
+    commands: [],
+    onComplete() {
+      process.exit(0);
+    }
   };
   
   /**
@@ -84,6 +86,13 @@ export class SamerArtisan {
     return this;
   }
   
+  /**
+   * Do something on command completion
+  */
+  static onComplete(cb: () => void) {
+    this.$config.onComplete = cb;
+    return this;
+  }
   
   /**
    * Resolve path to absolute
@@ -167,7 +176,6 @@ export class SamerArtisan {
       return await this.showCommandList();
     if(base === "cache")
       return await this.cacheCommands();
-    
     const commands = await this.$getCommands();
     const similarCommands: Record<string, Command> = {};
     
@@ -192,13 +200,15 @@ export class SamerArtisan {
   /**
    * Parse arguments and start cli
   */
-  static parse(args = process.argv) {
+  static async parse(args = process.argv) {
     const [baseInput, ...argsAndOpts] = args.splice(2);
     if(baseInput && baseInput !== "--help" && baseInput !== "-h") {
-      return this.call(baseInput, argsAndOpts)
+      await this.call(baseInput, argsAndOpts)
+      return this.$config.onComplete();
     }
     console.log(textSync(this.$config.name), "\n\n");
-    this.showCommandList();
+    await this.showCommandList();
+    this.$config.onComplete();
   }
   
   /**
@@ -211,7 +221,6 @@ export class SamerArtisan {
       const padding = ' '.repeat(30 - command.base.length);
       console.log(`  ${green(command.base)}${padding}${command.description}`);
     });
-    process.exit(0);
   }
   
   /**
@@ -224,7 +233,7 @@ export class SamerArtisan {
       let argsList = "";
       for(const name in args) {
         const padding = ' '.repeat(20 - name.length);
-        argsList += `  ${green(name)}${padding}${args[name]}\n`;
+        argsList += `  ${green(name)}${padding}${args[name] ?? ""}\n`;
       }
       console.log(`${yellow("Arguments")}:\n${argsList}`);
     }
@@ -232,10 +241,9 @@ export class SamerArtisan {
     let optsList = "";
     for(const name in opts) {
       const padding = ' '.repeat(20 - name.length);
-      optsList += `  ${green(name)}${padding}${opts[name]}\n`;
+      optsList += `  ${green(name)}${padding}${opts[name] ?? ""}\n`;
     }
     console.log(`${yellow("Options")}:\n${optsList}`);
-    process.exit(0);
   }
   
   /**
@@ -250,13 +258,14 @@ export class SamerArtisan {
         if(!fileName.endsWith(".js")) continue;
         const fullPath = this.$resolvePath(dir, fileName);
         const command = await this.$getCommand(fullPath);
-        if(!command.signature)
+        if(!(command instanceof Command))
+          consoleError(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`);
+       if(!command.signature)
           consoleError(`Signature required in command: "${join(dir, fileName)}"`);
         paths.push(fullPath)
       }
     }
     mkdirSync(dirname(absoluteCacheDist), { recursive: true })
     writeFileSync(absoluteCacheDist, JSON.stringify(paths));
-    process.exit(0);
   }
 }

@@ -4,4 +4,7 @@ SamerArtisan
   .cacheDist("cache/artisan.json")
   .load("examples/commands")
   .parse();
+
+setTimeout(() => {
   
+}, 6000)

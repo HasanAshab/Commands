@@ -3,7 +3,7 @@ const { Command } = require("../../lib/Command");
 class Test extends Command {
   signature = `test 
         { a: First arg }
-        { b: Second arg }
+        { b }
         { c: Third arg }
         { --dog : First opt }`
         
