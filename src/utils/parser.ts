@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { consoleError } from "./console";
+import { consoleError } from "../exceptions/console";
 
 
 //helper function for parseing single signature

@@ -6,3 +6,5 @@ import { join } from "path";
 export function resolvePath(...paths: string[]) {
   return join(process.env.NODE_PATH!, ...paths);
 }
+
+export * from "./parser";

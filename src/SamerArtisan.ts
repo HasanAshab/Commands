@@ -1,9 +1,8 @@
 import { Command } from "./commands/Command";
-import { SamerArtisanConfig } from "./interfaces";
-import { parseArguments } from "./utils/parser";
-import { consoleError } from "./utils/console";
-import { commandCompleted } from "./utils/event";
-import { resolvePath } from "./utils/path";
+import type { SamerArtisanConfig } from "./interfaces";
+import Event from "./event";
+import { parseArguments, resolvePath } from "./utils";
+import { consoleError } from "./exceptions/console";
 import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
 
@@ -85,7 +84,15 @@ export class SamerArtisan {
    * Do something on command completion
   */
   static onComplete(cb: () => void) {
-    commandCompleted(cb);
+    Event.on("commandCompleted", cb);
+    return this;
+  }
+  
+  /**
+   * Kills process after the command is completed
+  */
+  static forceExit() {
+    Event.on("commandCompleted", () => process.exit());
     return this;
   }
   
@@ -204,11 +211,11 @@ export class SamerArtisan {
     const [baseInput, ...argsAndOpts] = args.splice(2);
     if(baseInput && baseInput !== "--help" && baseInput !== "-h") {
       await this.call(baseInput, argsAndOpts)
-      return commandCompleted();
+      return Event.emit("commandCompleted");
     }
     console.log(textSync(this.$config.name), "\n\n");
     Command.showGlobalOptions();
     await this.call("list");
-    commandCompleted();
+    Event.emit("commandCompleted");
   }
 }

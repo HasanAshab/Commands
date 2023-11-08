@@ -1,5 +1,5 @@
 import { bgRed, bold } from "chalk";
-import { commandCompleted } from "./event";
+import Event from "../event";
 
 export function consoleError(message: string, recommendHelpFlag = false) {
   const helpMessage = recommendHelpFlag ? "(use -h for help) " : "";
@@ -9,7 +9,7 @@ export function consoleError(message: string, recommendHelpFlag = false) {
   console.log(bgRed(` ${bold(message)}  ${helpMessage}`))
   console.log(bgRed(margin));
   console.log("\r");
-  commandCompleted();
+  Event.emit("commandCompleted");
 }
 
 

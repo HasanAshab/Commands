@@ -3,8 +3,8 @@ import { green, yellow, black, red, white, bgRed } from "chalk";
 import prompts, { Choice } from "prompts";
 import Table from "cli-table";
 import { SingleBar, Presets } from 'cli-progress';
-import { parseDescriptions } from "../utils/parser";
-import { consoleError } from "../utils/console";
+import { parseDescriptions } from "../utils";
+import { consoleError } from "../exceptions/console";
 
 
 export abstract class Command<

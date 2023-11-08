@@ -1,6 +1,6 @@
 import type { SamerArtisan } from "../SamerArtisan";
 import { Command } from "./Command";
-import { resolvePath } from "../utils/path";
+import { resolvePath } from "../utils";
 import { join, dirname } from "path";
 import { readdirSync, writeFileSync, mkdirSync } from "fs";
 

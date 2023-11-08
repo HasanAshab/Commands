@@ -5,4 +5,3 @@ SamerArtisan
   .cacheDist("cache/artisan.json")
   .load("commands")
   .parse();
-  
