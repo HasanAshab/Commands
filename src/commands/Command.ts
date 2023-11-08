@@ -1,4 +1,4 @@
-import type { SamerArtisanConfig, GlobalOptions } from "../interfaces";
+import type { SamerArtisanConfig, GlobalOptions, CommandMetadata } from "../interfaces";
 import { green, yellow, black, red, white, bgRed } from "chalk";
 import prompts, { Choice } from "prompts";
 import Table from "cli-table";
@@ -6,11 +6,6 @@ import { SingleBar, Presets } from 'cli-progress';
 import { parseDescriptions } from "../utils/parser";
 import { consoleError } from "../utils/console";
 
-
-export interface CommandMetadata {
-  base?: string;
-  pattern?: string;
-}
 
 export abstract class Command<
   Arguments = Record<string, string | null>,
@@ -25,6 +20,9 @@ export abstract class Command<
     { --v|verbose: Get verbose output }
   `;
   
+  /**
+   * Prints global options
+  */
   static showGlobalOptions() {
     const { opts } = parseDescriptions(this.globalOptions) as any;
     let optsList = "";
@@ -45,6 +43,9 @@ export abstract class Command<
   */
   public description = "";
   
+  /**
+   * Metadata of the command
+  */
   public metadata: CommandMetadata = {};
   
   

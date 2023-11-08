@@ -209,5 +209,6 @@ export class SamerArtisan {
     console.log(textSync(this.$config.name), "\n\n");
     Command.showGlobalOptions();
     await this.call("list");
+    commandCompleted();
   }
 }
