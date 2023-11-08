@@ -84,6 +84,14 @@ export class SamerArtisan {
     return this;
   }
   
+  /**
+   * Specify global options signature
+  */
+  static globalOptions(signature: string) {
+    Command.globalOptions = signature;
+    return this
+  }
+  
   
   /**
    * Resolve path to absolute

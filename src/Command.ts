@@ -21,7 +21,7 @@ export abstract class Command<
   /**
    * Global options those are available across every command
   */
-  static readonly globalOptions = `
+  static globalOptions = `
     { --h|help: Show help of a command }
     { --v|verbose: Get verbose output }
   `;
