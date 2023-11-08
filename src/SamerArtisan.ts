@@ -1,23 +1,15 @@
 import { Command } from "./Command";
 import { SamerArtisanConfig } from "./interfaces";
-import { parseArguments, parseDescriptions } from "./utils/parser";
+import { parseArguments } from "./utils/parser";
 import { consoleError } from "./utils/console";
 import { commandCompleted } from "./utils/event";
 import { join, dirname } from "path";
 import { readdirSync, writeFileSync, mkdirSync } from "fs";
 import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
-import { yellow, green, bgRed } from "chalk";
+import { green } from "chalk";
 
 export class SamerArtisan {
-  /**
-   * Global options those are available across every command
-  */
-  static readonly $globalOptions = `
-    { --h|help: Show help of a command }
-    { --v|verbose: Get verbose output }
-  `;
-  
   /**
    * Default Config of Node Artisan
   */
@@ -160,8 +152,8 @@ export class SamerArtisan {
   */
   static async exec(command: Command, input: string[] = []) {
     if(input.includes("--help") || input.includes("-h"))
-      return this.showHelp(command);
-    const { args, opts } = parseArguments(this.$globalOptions + command.pattern, input) as any;
+      return command.showHelp();
+    const { args, opts } = parseArguments(Command.globalOptions + command.pattern, input) as any;
     command.setup(args, opts);
     await command.handle();
   }
@@ -205,6 +197,7 @@ export class SamerArtisan {
       return commandCompleted();
     }
     console.log(textSync(this.$config.name), "\n\n");
+    Command.showGlobalOptions();
     await this.showCommandList();
     commandCompleted();
   }
@@ -221,36 +214,7 @@ export class SamerArtisan {
     });
   }
   
-  /**
-   * Show help of a command
-  */
-  static showHelp(command: Command) {
-    if(command.showHelp) {
-      return command.showHelp();
-    }
-    console.log(`${yellow("Description")}:\n  ${command.description}\n`);
-    const { args, opts } = parseDescriptions(this.$globalOptions + command.pattern) as any;
-    if(args) {
-      let argsList = "";
-      let hasAtleastOneArgument = false;
-      for(const name in args) {
-        const padding = ' '.repeat(20 - name.length);
-        const description = args[name];
-        if(description)
-          hasAtleastOneArgument = true;
-        argsList += `  ${green(name)}${padding}${description ?? ""}\n`;
-      }
-      hasAtleastOneArgument && console.log(`${yellow("Arguments")}:\n${argsList}`);
-    }
-    
-    let optsList = "";
-    for(const name in opts) {
-      const padding = ' '.repeat(20 - name.length);
-      optsList += `  ${green(name)}${padding}${opts[name] ?? ""}\n`;
-    }
-    console.log(`${yellow("Options")}:\n${optsList}`);
-  }
-  
+
   /**
    * Cache commands path from load dir
   */

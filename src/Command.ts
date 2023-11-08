@@ -1,7 +1,8 @@
-import { green, black, red, white } from "chalk";
+import { green, yellow, black, red, white, bgRed } from "chalk";
 import prompts, { Choice } from "prompts";
 import Table from "cli-table";
 import { SingleBar, Presets } from 'cli-progress';
+import { parseDescriptions } from "./utils/parser";
 import { consoleError } from "./utils/console";
 import { GlobalOptions } from "./interfaces";
 
@@ -16,6 +17,24 @@ export abstract class Command<
   Arguments = Record<string, string | null>,
   Options = Record<string, boolean | string | null>
 > {
+  
+  /**
+   * Global options those are available across every command
+  */
+  static readonly globalOptions = `
+    { --h|help: Show help of a command }
+    { --v|verbose: Get verbose output }
+  `;
+  
+  static showGlobalOptions() {
+    const { opts } = parseDescriptions(this.globalOptions) as any;
+    let optsList = "";
+    for(const name in opts) {
+      const padding = ' '.repeat(20 - name.length);
+      optsList += `  ${green(name)}${padding}${opts[name] ?? ""}\n`;
+    }
+    console.log(`${yellow("Options")}:\n${optsList}`);
+  }
   
   /**
    * signature of the command
@@ -272,5 +291,32 @@ export abstract class Command<
       this.metadata.base = this.signature.substring(0, firstSpaceIndex);
       this.metadata.pattern = this.signature.substring(this.signature.indexOf(' ') + 1);
     }
+  }
+  
+  /**
+   * Show help of the command when the user flagged for help
+  */
+  showHelp() {
+    console.log(`${yellow("Description")}:\n  ${this.description}\n`);
+    const { args, opts } = parseDescriptions(Command.globalOptions + this.pattern) as any;
+    if(args) {
+      let argsList = "";
+      let hasAtleastOneArgument = false;
+      for(const name in args) {
+        const padding = ' '.repeat(20 - name.length);
+        const description = args[name];
+        if(description)
+          hasAtleastOneArgument = true;
+        argsList += `  ${green(name)}${padding}${description ?? ""}\n`;
+      }
+      hasAtleastOneArgument && console.log(`${yellow("Arguments")}:\n${argsList}`);
+    }
+    
+    let optsList = "";
+    for(const name in opts) {
+      const padding = ' '.repeat(20 - name.length);
+      optsList += `  ${green(name)}${padding}${opts[name] ?? ""}\n`;
+    }
+    console.log(`${yellow("Options")}:\n${optsList}`);
   }
 }
