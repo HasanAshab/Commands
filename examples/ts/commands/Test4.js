@@ -1,8 +1,9 @@
-const { Command } = require("../../lib/Command");
+const { Command } = require("../../../lib/Command");
 
 class Test extends Command {
-  signature = "testts"
-  description = "For testing 2"
+  signature = "tes"
+  description = "For testing 4. bla bla bla bla bla bla"
+
   
   async handle() {
     let pc = 0;

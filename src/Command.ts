@@ -1,3 +1,4 @@
+import { SamerArtisanConfig } from "./interfaces";
 import { green, yellow, black, red, white, bgRed } from "chalk";
 import prompts, { Choice } from "prompts";
 import Table from "cli-table";
@@ -51,6 +52,11 @@ export abstract class Command<
   /**
    * Parsed arguments
   */
+  private config!: SamerArtisanConfig;
+  
+  /**
+   * Parsed arguments
+  */
   private args!: Arguments;
   
   /**
@@ -69,7 +75,8 @@ export abstract class Command<
    * Using it as alternate of constructor to make it
    * easier to inject
   */
-  setup(args: Arguments, opts: Options & GlobalOptions): void {
+  setup(config: SamerArtisanConfig, args: Arguments, opts: Options & GlobalOptions): void {
+    this.config = config;
     this.args = args;
     this.opts = opts;
   }

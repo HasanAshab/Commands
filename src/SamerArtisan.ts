@@ -29,6 +29,14 @@ export class SamerArtisan {
   }
   
   /**
+   * Specify the root directory
+  */
+  static root(dir: string) {
+    this.$config.root = dir;
+    return this;
+  } 
+  
+  /**
    * Specify cache distination
   */
   static projectName(name: string) {
@@ -63,15 +71,15 @@ export class SamerArtisan {
   /**
    * Specify commands path
   */
-  static commands(paths: string[]) {
-    this.$config.commands = paths;
+  static commands(pathsOrCommands: (string | Command)[]) {
+    this.$config.commands = pathsOrCommands;
     return this;
   }
   
   /**
    * Add command path
   */
-  static add(path: string) {
+  static add(path: string | Command) {
     this.$config.commands.push(path);
     return this;
   }
@@ -127,13 +135,22 @@ export class SamerArtisan {
   /**
    * Get all registered command classes
   */
-  static $getCommands(): Promise<Command[]> {
-    const commandPaths = this.$config.commands.map(path => this.$resolvePath(path));
+  static async $getCommands(): Promise<Command[]> {
+    const commandPaths: string[] = [];
+    const resolvedCommands: Command[] = [];
+    
+    this.$config.commands.forEach(path => {
+      if(typeof path === "string")
+        commandPaths.push(this.$resolvePath(path));
+      else resolvedCommands.push(path);
+    });
+    
     if(this.$config.load.length > 0) {
       commandPaths.push(...this.$getCacheCommands());
     }
     const importPromises = commandPaths.map(path => this.$getCommand(path))
-    return Promise.all(importPromises);
+    resolvedCommands.push(...await Promise.all(importPromises));
+    return resolvedCommands;
   }
   
   /**
@@ -162,7 +179,7 @@ export class SamerArtisan {
     if(input.includes("--help") || input.includes("-h"))
       return command.showHelp();
     const { args, opts } = parseArguments(Command.globalOptions + command.pattern, input) as any;
-    command.setup(args, opts);
+    command.setup(this.$config, args, opts);
     await command.handle();
   }
   
@@ -232,7 +249,7 @@ export class SamerArtisan {
     for(const dir of this.$config.load) {
       const files = readdirSync(this.$resolvePath(dir));
       for(const fileName of files) {
-        if(!fileName.endsWith(".js")) continue;
+        if(!fileName.endsWith(".js") && !fileName.endsWith(".ts")) continue;
         const fullPath = this.$resolvePath(dir, fileName);
         const command = await this.$getCommand(fullPath);
         if(!(command instanceof Command))

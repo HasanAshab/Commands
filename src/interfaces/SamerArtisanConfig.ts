@@ -1,3 +1,5 @@
+import type { Command } from "../Command";
+
 export interface SamerArtisanConfig {
   /**
    * Name of the CLI
@@ -21,7 +23,7 @@ export interface SamerArtisanConfig {
   load: string[];
   
   /**
-   * Additional commands path
+   * Additional commands instance or path
   */
-  commands: string[];
+  commands: (string | Command)[];
 }
