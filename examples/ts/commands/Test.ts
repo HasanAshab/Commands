@@ -1,4 +1,4 @@
-import { Command } from "../../../lib/Command";
+import { Command } from "../../../lib";
 
 interface Arguments {
   a: string;
@@ -20,7 +20,7 @@ export default class Test extends Command<Arguments, Options> {
   description = "For testing"
   
   async handle() {
-    console.log(this.argument("w"))
+    console.log(this.argument("c"))
   }
 }
 

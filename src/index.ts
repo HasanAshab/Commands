@@ -3,7 +3,7 @@ import CacheCommands from "./commands/CacheCommands";
 import ListCommands from "./commands/ListCommands";
 
 /**
- * Root of the project.
+ * Setting default root of the project.
  * All imports will be prefixed with that
 */
 process.env.NODE_PATH = process.cwd();

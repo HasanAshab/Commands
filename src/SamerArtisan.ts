@@ -168,7 +168,7 @@ export class SamerArtisan {
     if(input.includes("--help") || input.includes("-h"))
       return command.showHelp();
     const { args, opts } = parseArguments(Command.globalOptions + command.pattern, input) as any;
-    command.setup(this.$config, args, opts);
+    command.setup(args, opts);
     await command.handle();
   }
   

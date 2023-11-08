@@ -1,4 +1,4 @@
-import { SamerArtisan } from "../../lib/SamerArtisan";
+import { SamerArtisan } from "../../lib";
 
 SamerArtisan
   .root(__dirname)
