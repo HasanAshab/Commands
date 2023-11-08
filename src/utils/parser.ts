@@ -70,13 +70,13 @@ const addArgumentsValue = (obj, inputs) => {
       let i = 0;
       while (i < inputs.length && inputs[i] !== key) i++;
       if (i === inputs.length) 
-        consoleError("Too Few Arguments.")
+        consoleError("Too Few Arguments.", true)
       obj[key].value = inputs.splice(i).slice(1);
     } else {
       if (inputs.length > 0) {
         obj[key].value = inputs.shift();
       } else if (!obj[key].isOptional) {
-        consoleError("Too Few Arguments.")
+        consoleError("Too Few Arguments.", true)
       }
     }
 
@@ -85,7 +85,7 @@ const addArgumentsValue = (obj, inputs) => {
   }
 
   if (inputs.length > 0)
-    consoleError("Too Many Arguments.")
+    consoleError("Too Many Arguments.", true)
 };
 
 const addOptionsValue = (obj, inputs) => {
@@ -119,7 +119,7 @@ const addOptionsValue = (obj, inputs) => {
   }
 
   if (inputs.length > 0) 
-    consoleError("Unknown Option Specified.")
+    consoleError("Unknown Option Specified.", true);
 };
 
 export function parseArguments(signature, inputs) {

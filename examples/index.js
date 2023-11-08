@@ -1,10 +1,8 @@
 const { SamerArtisan } = require("../lib/SamerArtisan");
 
 SamerArtisan
-  .cacheDist("cache/artisan.json")
+  .cacheDist("examples/cache/artisan.json")
+  //.onComplete(() => console.log("shesh"))
   .load("examples/commands")
   .parse();
-
-setTimeout(() => {
   
-}, 6000)

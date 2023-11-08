@@ -1,7 +1,8 @@
 import { Command } from "./Command";
-import { SamerArtisanConfig } from "./interfaces/SamerArtisanConfig";
+import { SamerArtisanConfig } from "./interfaces";
 import { parseArguments, parseDescriptions } from "./utils/parser";
 import { consoleError } from "./utils/console";
+import { commandCompleted } from "./utils/event";
 import { join, dirname } from "path";
 import { readdirSync, writeFileSync, mkdirSync } from "fs";
 import prompts, { Choice } from "prompts";
@@ -10,7 +11,7 @@ import { yellow, green, bgRed } from "chalk";
 
 export class SamerArtisan {
   /**
-   * Global options that available on all commands
+   * Global options those are available across every command
   */
   static readonly $globalOptions = `
     { --h|help: Show help of a command }
@@ -25,10 +26,7 @@ export class SamerArtisan {
     root: process.cwd(),
     cacheDist: "node-artisan.json",
     load: [],
-    commands: [],
-    onComplete() {
-      process.exit(0);
-    }
+    commands: []
   };
   
   /**
@@ -90,9 +88,10 @@ export class SamerArtisan {
    * Do something on command completion
   */
   static onComplete(cb: () => void) {
-    this.$config.onComplete = cb;
+    commandCompleted(cb);
     return this;
   }
+  
   
   /**
    * Resolve path to absolute
@@ -121,7 +120,7 @@ export class SamerArtisan {
       ? fileData
       : fileData.default;
     if(typeof CommandClass !== "function")
-      consoleError(`No command class found from path: "${path}"`);
+      consoleError(`No command class found from path: "${path}"`, true);
     return new CommandClass;
   }
   
@@ -160,9 +159,8 @@ export class SamerArtisan {
    * Execute a command
   */
   static async exec(command: Command, input: string[] = []) {
-    if(input.includes("--help") || input.includes("-h")) {
-      this.showHelp(command);
-    }
+    if(input.includes("--help") || input.includes("-h"))
+      return this.showHelp(command);
     const { args, opts } = parseArguments(this.$globalOptions + command.pattern, input) as any;
     command.setup(args, opts);
     await command.handle();
@@ -189,7 +187,7 @@ export class SamerArtisan {
     const similars = Object.keys(similarCommands);
     
     if (similars.length === 0)
-      consoleError("No Command Found")
+      consoleError("No Command Found", true);
 
     const newBase = await this.$suggestSimilars(base, similars);
     if(newBase) {
@@ -204,11 +202,11 @@ export class SamerArtisan {
     const [baseInput, ...argsAndOpts] = args.splice(2);
     if(baseInput && baseInput !== "--help" && baseInput !== "-h") {
       await this.call(baseInput, argsAndOpts)
-      return this.$config.onComplete();
+      return commandCompleted();
     }
     console.log(textSync(this.$config.name), "\n\n");
     await this.showCommandList();
-    this.$config.onComplete();
+    commandCompleted();
   }
   
   /**
@@ -227,15 +225,22 @@ export class SamerArtisan {
    * Show help of a command
   */
   static showHelp(command: Command) {
+    if(command.showHelp) {
+      return command.showHelp();
+    }
     console.log(`${yellow("Description")}:\n  ${command.description}\n`);
     const { args, opts } = parseDescriptions(this.$globalOptions + command.pattern) as any;
     if(args) {
       let argsList = "";
+      let hasAtleastOneArgument = false;
       for(const name in args) {
         const padding = ' '.repeat(20 - name.length);
-        argsList += `  ${green(name)}${padding}${args[name] ?? ""}\n`;
+        const description = args[name];
+        if(description)
+          hasAtleastOneArgument = true;
+        argsList += `  ${green(name)}${padding}${description ?? ""}\n`;
       }
-      console.log(`${yellow("Arguments")}:\n${argsList}`);
+      hasAtleastOneArgument && console.log(`${yellow("Arguments")}:\n${argsList}`);
     }
     
     let optsList = "";
@@ -259,9 +264,9 @@ export class SamerArtisan {
         const fullPath = this.$resolvePath(dir, fileName);
         const command = await this.$getCommand(fullPath);
         if(!(command instanceof Command))
-          consoleError(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`);
+          consoleError(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`, true);
        if(!command.signature)
-          consoleError(`Signature required in command: "${join(dir, fileName)}"`);
+          consoleError(`Signature required in command: "${join(dir, fileName)}"`, true);
         paths.push(fullPath)
       }
     }

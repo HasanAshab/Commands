@@ -24,9 +24,4 @@ export interface SamerArtisanConfig {
    * Additional commands path
   */
   commands: string[];
-  
-  /**
-   * Do something on command completion
-  */
-  onComplete(): void;
 }

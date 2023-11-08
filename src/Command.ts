@@ -2,15 +2,21 @@ import { green, black, red, white } from "chalk";
 import prompts, { Choice } from "prompts";
 import Table from "cli-table";
 import { SingleBar, Presets } from 'cli-progress';
+import { consoleError } from "./utils/console";
+import { GlobalOptions } from "./interfaces";
 
-export type CommandArgument = string | null;
-export type CommandOption = boolean | string | null;
+
+
 export interface CommandMetadata {
   base?: string;
   pattern?: string;
 }
 
-export abstract class Command {
+export abstract class Command<
+  Arguments = Record<string, string | null>,
+  Options = Record<string, boolean | string | null>
+> {
+  
   /**
    * signature of the command
   */
@@ -26,12 +32,12 @@ export abstract class Command {
   /**
    * Parsed arguments
   */
-  private args!: Record<string, CommandArgument>;
+  private args!: Arguments;
   
   /**
    * Parsed options
   */
-  private opts!: Record<string, CommandOption>;
+  private opts!: Options & GlobalOptions;
   
   /**
    * Perform the command action
@@ -41,10 +47,10 @@ export abstract class Command {
   /**
    * Setup the command to be executed with 
    * parsed arguments and options.
-   * Using it as alternat of constructor to make it
+   * Using it as alternate of constructor to make it
    * easier to inject
   */
-  setup(args: Record<string, CommandArgument>, opts: Record<string, CommandOption>): void {
+  setup(args: Arguments, opts: Options & GlobalOptions): void {
     this.args = args;
     this.opts = opts;
   }
@@ -52,14 +58,14 @@ export abstract class Command {
   /**
    * Get all arguments
   */
-  protected arguments(): Record<string, CommandArgument> {
+  protected arguments(): Arguments {
     return this.args;
   }
   
   /**
    * Get argument by name
   */
-  protected argument(name: string): CommandArgument {
+  protected argument<T extends string & keyof Arguments>(name: T): Arguments[T] {
     const arg = this.args[name];
     if(typeof arg === "undefined")
       throw new Error(`Argument "${name}" is not registered on signature.`);
@@ -69,14 +75,14 @@ export abstract class Command {
   /**
    * Get all options
   */
-  protected options(): Record<string, CommandOption> {
+  protected options(): Options & GlobalOptions {
     return this.opts;
   }
   
   /**
    * Get option by name
   */
-  protected option(name: string): CommandOption {
+  protected option<T extends string & keyof (Options & GlobalOptions)>(name: T): (Options & GlobalOptions)[T] {
     const option = this.opts[name];
     if(typeof option === "undefined")
       throw new Error(`Option "${name}" is not registered on signature.`);
@@ -227,6 +233,13 @@ export abstract class Command {
   */
   protected alert(message: string): void {
     console.log(white.bgRed(` ALERT `) + ' ' + message);
+  }
+  
+  /**
+   * Log error message and terminate command
+  */
+  protected fail(message: string, recommendHelpFlag = false): void {
+    consoleError(message, recommendHelpFlag);
   }
   
   /**
