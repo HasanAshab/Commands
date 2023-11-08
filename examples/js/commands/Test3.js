@@ -1,4 +1,4 @@
-const { Command } = require("../../../lib/Command");
+const { Command } = require("../../../lib");
 
 class Test extends Command {
   signature = "testtsie"

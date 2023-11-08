@@ -1,13 +1,11 @@
-import { Command } from "./Command";
+import { Command } from "./commands/Command";
 import { SamerArtisanConfig } from "./interfaces";
 import { parseArguments } from "./utils/parser";
 import { consoleError } from "./utils/console";
 import { commandCompleted } from "./utils/event";
-import { join, dirname } from "path";
-import { readdirSync, writeFileSync, mkdirSync } from "fs";
+import { resolvePath } from "./utils/path";
 import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
-import { green } from "chalk";
 
 export class SamerArtisan {
   /**
@@ -15,7 +13,6 @@ export class SamerArtisan {
   */
   static $config: SamerArtisanConfig = {
     name: "SamerArtisan",
-    root: process.cwd(),
     cacheDist: "node-artisan.json",
     load: [],
     commands: []
@@ -32,9 +29,9 @@ export class SamerArtisan {
    * Specify the root directory
   */
   static root(dir: string) {
-    this.$config.root = dir;
+    process.env.NODE_PATH = dir;
     return this;
-  } 
+  }
   
   /**
    * Specify cache distination
@@ -69,15 +66,15 @@ export class SamerArtisan {
   }
   
   /**
-   * Specify commands path
+   * Add multiple commands instance or path
   */
   static commands(pathsOrCommands: (string | Command)[]) {
-    this.$config.commands = pathsOrCommands;
+    this.$config.commands.push(...pathsOrCommands);
     return this;
   }
   
   /**
-   * Add command path
+   * Add command instance or path
   */
   static add(path: string | Command) {
     this.$config.commands.push(path);
@@ -100,20 +97,12 @@ export class SamerArtisan {
     return this
   }
   
-  
-  /**
-   * Resolve path to absolute
-  */
-  static $resolvePath(...paths: string[]) {
-    return join(this.$config.root, ...paths);
-  }
-  
   /**
    * Returns cached commands
   */
   static $getCacheCommands(): string[] {
     try {
-      return require(this.$resolvePath(this.$config.cacheDist));
+      return require(resolvePath(this.$config.cacheDist));
     } catch(err) {
       return [];
     }
@@ -141,7 +130,7 @@ export class SamerArtisan {
     
     this.$config.commands.forEach(path => {
       if(typeof path === "string")
-        commandPaths.push(this.$resolvePath(path));
+        commandPaths.push(resolvePath(path));
       else resolvedCommands.push(path);
     });
     
@@ -187,10 +176,6 @@ export class SamerArtisan {
    * Call a command by base
   */
   static async call(base: string, input: string[] = []) {
-    if(base === "list")
-      return await this.showCommandList();
-    if(base === "cache")
-      return await this.cacheCommands();
     const commands = await this.$getCommands();
     const similarCommands: Record<string, Command> = {};
     
@@ -223,43 +208,6 @@ export class SamerArtisan {
     }
     console.log(textSync(this.$config.name), "\n\n");
     Command.showGlobalOptions();
-    await this.showCommandList();
-    commandCompleted();
-  }
-  
-  /**
-   * Print all available commands
-  */
-  static async showCommandList() {
-    console.log("Available Commands:\n");
-    const commands = await this.$getCommands();
-    commands.forEach((command: Command) => {
-      const padding = ' '.repeat(30 - command.base.length);
-      console.log(`  ${green(command.base)}${padding}${command.description}`);
-    });
-  }
-  
-
-  /**
-   * Cache commands path from load dir
-  */
-  static async cacheCommands() {
-    const absoluteCacheDist = this.$resolvePath(this.$config.cacheDist);
-    const paths: string[] = [];
-    for(const dir of this.$config.load) {
-      const files = readdirSync(this.$resolvePath(dir));
-      for(const fileName of files) {
-        if(!fileName.endsWith(".js") && !fileName.endsWith(".ts")) continue;
-        const fullPath = this.$resolvePath(dir, fileName);
-        const command = await this.$getCommand(fullPath);
-        if(!(command instanceof Command))
-          consoleError(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`, true);
-       if(!command.signature)
-          consoleError(`Signature required in command: "${join(dir, fileName)}"`, true);
-        paths.push(fullPath)
-      }
-    }
-    mkdirSync(dirname(absoluteCacheDist), { recursive: true })
-    writeFileSync(absoluteCacheDist, JSON.stringify(paths));
+    await this.call("list");
   }
 }

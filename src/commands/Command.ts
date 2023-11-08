@@ -1,12 +1,10 @@
-import { SamerArtisanConfig } from "./interfaces";
+import type { SamerArtisanConfig, GlobalOptions } from "../interfaces";
 import { green, yellow, black, red, white, bgRed } from "chalk";
 import prompts, { Choice } from "prompts";
 import Table from "cli-table";
 import { SingleBar, Presets } from 'cli-progress';
-import { parseDescriptions } from "./utils/parser";
-import { consoleError } from "./utils/console";
-import { GlobalOptions } from "./interfaces";
-
+import { parseDescriptions } from "../utils/parser";
+import { consoleError } from "../utils/console";
 
 
 export interface CommandMetadata {
@@ -49,10 +47,6 @@ export abstract class Command<
   
   public metadata: CommandMetadata = {};
   
-  /**
-   * Parsed arguments
-  */
-  private config!: SamerArtisanConfig;
   
   /**
    * Parsed arguments
@@ -75,8 +69,7 @@ export abstract class Command<
    * Using it as alternate of constructor to make it
    * easier to inject
   */
-  setup(config: SamerArtisanConfig, args: Arguments, opts: Options & GlobalOptions): void {
-    this.config = config;
+  setup(args: Arguments, opts: Options & GlobalOptions): void {
     this.args = args;
     this.opts = opts;
   }

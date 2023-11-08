@@ -1,4 +1,4 @@
-import type { Command } from "../Command";
+import type { Command } from "../commands/Command";
 
 export interface SamerArtisanConfig {
   /**
@@ -6,12 +6,7 @@ export interface SamerArtisanConfig {
   */
   name: string;
   
-  /**
-   * Root of the project.
-   * All imports will be prefixed with that
-  */
-  root: string;
-  
+
   /**
    * Commands cache distination
   */
