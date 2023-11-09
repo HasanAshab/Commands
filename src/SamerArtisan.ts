@@ -1,6 +1,5 @@
 import { Command } from "./commands/Command";
 import type { SamerArtisanConfig } from "./interfaces";
-import Event from "./event";
 import { parseArguments } from "./utils";
 import { consoleError } from "./exceptions/console";
 import prompts, { Choice } from "prompts";
@@ -85,22 +84,6 @@ export class SamerArtisan {
   */
   static add(path: string | Command) {
     this.$config.commands.push(path);
-    return this;
-  }
-  
-  /**
-   * Do something on command completion
-  */
-  static onComplete(cb: () => void) {
-    Event.on("commandCompleted", cb);
-    return this;
-  }
-  
-  /**
-   * Kills process after the command is completed
-  */
-  static forceExit() {
-    Event.on("commandCompleted", () => process.exit());
     return this;
   }
   
@@ -231,13 +214,11 @@ export class SamerArtisan {
     this.$assertBaseSignaturesAreUnique();
     
     const [baseInput, ...argsAndOpts] = args.splice(2);
-    if(baseInput && baseInput !== "--help" && baseInput !== "-h") {
-      await this.call(baseInput, argsAndOpts)
-      return Event.emit("commandCompleted");
-    }
+    if(baseInput && baseInput !== "--help" && baseInput !== "-h")
+      return await this.call(baseInput, argsAndOpts)
+    
     console.log(textSync(this.$config.name), "\n\n");
     Command.showGlobalOptions();
     await this.call("list");
-    Event.emit("commandCompleted");
   }
 }

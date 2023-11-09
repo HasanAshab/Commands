@@ -14,9 +14,6 @@ class CustomCommand extends Command {
 SamerArtisan
   .root(__dirname)
   .cacheDist("cache/artisan.json")
-  .onComplete(() => console.log("shesh1"))
-  .onComplete(() => console.log("shesh2"))
-  .forceExit()
   .load("commands")
-  .commands([new CustomCommand()])
+  .add(new CustomCommand())
   .parse();
