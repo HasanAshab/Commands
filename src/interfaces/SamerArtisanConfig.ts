@@ -2,11 +2,15 @@ import type { Command } from "../commands/Command";
 
 export interface SamerArtisanConfig {
   /**
+   * All imports will be joined with that
+  */
+  root: string;
+  
+  /**
    * Name of the CLI
   */
   name: string;
   
-
   /**
    * Commands cache distination
   */

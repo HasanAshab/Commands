@@ -1,6 +1,5 @@
 import type { SamerArtisan } from "../SamerArtisan";
 import { Command } from "./Command";
-import { resolvePath } from "../utils";
 import { join, dirname } from "path";
 import { readdirSync, writeFileSync, mkdirSync } from "fs";
 
@@ -18,13 +17,13 @@ export default class CacheCommands extends Command {
    * Its nessesary only when using load() or loadFrom()
   */
   async handle() {
-    const absoluteCacheDist = resolvePath(this.samerArtisan.$config.cacheDist);
+    const absoluteCacheDist = this.samerArtisan.$config.cacheDist;
     const paths: string[] = [];
     for(const dir of this.samerArtisan.$config.load) {
-      const files = readdirSync(resolvePath(dir));
+      const files = readdirSync(this.samerArtisan.$resolvePath(dir));
       for(const fileName of files) {
         if(!fileName.endsWith(".js") && !fileName.endsWith(".ts")) continue;
-        const fullPath = resolvePath(dir, fileName);
+        const fullPath = this.samerArtisan.$resolvePath(dir, fileName);
         const command = await this.samerArtisan.$getCommand(fullPath);
         if(!(command instanceof Command))
           this.fail(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`, true);

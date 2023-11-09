@@ -10,6 +10,7 @@ class CustomCommand extends Command {
   }
 }
 
+
 SamerArtisan
   .root(__dirname)
   .cacheDist("cache/artisan.json")
@@ -19,5 +20,3 @@ SamerArtisan
   .load("commands")
   .commands([new CustomCommand()])
   .parse();
-
-

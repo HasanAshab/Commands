@@ -1,16 +1,18 @@
 import { Command } from "./commands/Command";
 import type { SamerArtisanConfig } from "./interfaces";
 import Event from "./event";
-import { parseArguments, resolvePath } from "./utils";
+import { parseArguments } from "./utils";
 import { consoleError } from "./exceptions/console";
 import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
+import { join } from "path";
 
 export class SamerArtisan {
   /**
    * Default Config of Node Artisan
   */
   static $config: SamerArtisanConfig = {
+    root: "",
     name: "SamerArtisan",
     cacheDist: "node-artisan.json",
     load: [],
@@ -34,7 +36,7 @@ export class SamerArtisan {
    * Specify the root directory
   */
   static root(dir: string) {
-    process.env.NODE_PATH = dir;
+    this.$config.root = dir;
     return this;
   }
   
@@ -50,7 +52,7 @@ export class SamerArtisan {
    * Specify cache distination
   */
   static cacheDist(path: string) {
-    this.$config.cacheDist = path;
+    this.$config.cacheDist = this.$resolvePath(path);
     return this;
   }
   
@@ -111,11 +113,18 @@ export class SamerArtisan {
   }
   
   /**
+   * Resolve path to absolute
+  */
+  static $resolvePath(...paths: string[]) {
+    return join(this.$config.root, ...paths);
+  }
+
+  /**
    * Returns cached commands
   */
   static get $cacheCommandsPath(): string[] {
     try {
-      return require(resolvePath(this.$config.cacheDist));
+      return require(this.$config.cacheDist);
     } catch(err) {
       return [];
     }
@@ -141,7 +150,7 @@ export class SamerArtisan {
     const commandPaths: string[] = [];
     this.$config.commands.forEach(command => {
       if(typeof command === "string")
-        commandPaths.push(resolvePath(command));
+        commandPaths.push(this.$resolvePath(command));
       else this.$resolvedCommands.push(command);
     });
     
