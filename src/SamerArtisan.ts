@@ -18,6 +18,12 @@ export class SamerArtisan {
   };
   
   /**
+   * Command instances
+  */
+  static $resolvedCommands: Command[] = [];
+
+  
+  /**
    * Setup node artisan
   */
   static setup(config: Partial<SamerArtisanConfig>) {
@@ -107,7 +113,7 @@ export class SamerArtisan {
   /**
    * Returns cached commands
   */
-  static $getCacheCommands(): string[] {
+  static get $cacheCommandsPath(): string[] {
     try {
       return require(resolvePath(this.$config.cacheDist));
     } catch(err) {
@@ -131,22 +137,28 @@ export class SamerArtisan {
   /**
    * Get all registered command classes
   */
-  static async $getCommands(): Promise<Command[]> {
+  static async $resolveCommands(): Promise<void> {
     const commandPaths: string[] = [];
-    const resolvedCommands: Command[] = [];
-    
-    this.$config.commands.forEach(path => {
-      if(typeof path === "string")
-        commandPaths.push(resolvePath(path));
-      else resolvedCommands.push(path);
+    this.$config.commands.forEach(command => {
+      if(typeof command === "string")
+        commandPaths.push(resolvePath(command));
+      else this.$resolvedCommands.push(command);
     });
     
     if(this.$config.load.length > 0) {
-      commandPaths.push(...this.$getCacheCommands());
+      commandPaths.push(...this.$cacheCommandsPath);
     }
     const importPromises = commandPaths.map(path => this.$getCommand(path))
-    resolvedCommands.push(...await Promise.all(importPromises));
-    return resolvedCommands;
+    this.$resolvedCommands.push(...await Promise.all(importPromises));
+  }
+  
+  static $assertBaseSignaturesAreUnique() {
+    const usedBaseSignatures: string[] = [];
+    this.$resolvedCommands.forEach(command => {
+      if(usedBaseSignatures.includes(command.base))
+        consoleError(`Signature "${command.base}" used in multiple commands.`);
+      usedBaseSignatures.push(command.base);
+    });
   }
   
   /**
@@ -183,10 +195,8 @@ export class SamerArtisan {
    * Call a command by base
   */
   static async call(base: string, input: string[] = []) {
-    const commands = await this.$getCommands();
     const similarCommands: Record<string, Command> = {};
-    
-    for(const command of commands) {
+    for(const command of this.$resolvedCommands) {
       if(command.base === base)
         return await this.exec(command, input);
       else if (command.base.startsWith(base))
@@ -208,6 +218,9 @@ export class SamerArtisan {
    * Parse arguments and start cli
   */
   static async parse(args = process.argv) {
+    await this.$resolveCommands();
+    this.$assertBaseSignaturesAreUnique();
+    
     const [baseInput, ...argsAndOpts] = args.splice(2);
     if(baseInput && baseInput !== "--help" && baseInput !== "-h") {
       await this.call(baseInput, argsAndOpts)

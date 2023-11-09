@@ -13,8 +13,7 @@ export default class ListCommands extends Command {
   
   async handle() {
     console.log("Available Commands:\n");
-    const commands = await this.samerArtisan.$getCommands();
-    commands.forEach((command: Command) => {
+    this.samerArtisan.$resolvedCommands.forEach((command: Command) => {
       const padding = ' '.repeat(30 - command.base.length);
       console.log(`  ${green(command.base)}${padding}${command.description}`);
     });

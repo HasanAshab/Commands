@@ -298,7 +298,9 @@ export abstract class Command<
    * Show help of the command when the user flagged for help
   */
   showHelp() {
-    console.log(`${yellow("Description")}:\n  ${this.description}\n`);
+    if(this.description) {
+      console.log(`${yellow("Description")}:\n  ${this.description}\n`);
+    }
     const { args, opts } = parseDescriptions(Command.globalOptions + this.pattern) as any;
     if(args) {
       let argsList = "";
