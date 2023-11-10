@@ -1,10 +1,10 @@
 import type { SamerArtisan } from "../SamerArtisan";
 import { Command } from "./Command";
 import { join, dirname } from "path";
-import { readdirSync, writeFileSync, mkdirSync } from "fs";
+import { readdirSync, writeFileSync, mkdirSync, unlinkSync } from "fs";
 
-export default class CacheCommands extends Command {
-  signature = "cache";
+export default class CacheCommands extends Command<{}, { clear: boolean }> {
+  signature = "cache {--C|clear: Clear cached command paths }";
   description = "Cache commands path from loaded directories";
   
   constructor(private readonly samerArtisan: typeof SamerArtisan) {
@@ -17,6 +17,13 @@ export default class CacheCommands extends Command {
    * Its nessesary only when using load() or loadFrom()
   */
   async handle() {
+    if(this.option("clear")) {
+      try {
+        unlinkSync(this.samerArtisan.$cacheDist);
+      } catch {}
+      return this.info("\nCache cleared successfully!");
+    }
+    
     const paths: string[] = [];
     for(const dir of this.samerArtisan.$config.load) {
       const files = readdirSync(this.samerArtisan.$resolvePath(dir));

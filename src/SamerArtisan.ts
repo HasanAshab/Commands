@@ -22,7 +22,7 @@ export class SamerArtisan {
   /**
    * Command instances
   */
-  static $resolvedCommands: Command[] = [];
+  static $resolvedCommands: Command<unknown, unknown>[] = [];
 
   
   /**
@@ -62,7 +62,7 @@ export class SamerArtisan {
   /**
    * Add multiple commands instance or path
   */
-  static commands(pathsOrCommands: (string | Command)[]) {
+  static commands(pathsOrCommands: (string | Command<unknown, unknown>)[]) {
     this.$config.commands.push(...pathsOrCommands);
     return this;
   }
@@ -163,7 +163,7 @@ export class SamerArtisan {
   /**
    * Execute a command
   */
-  static async exec(command: Command, input: string[] = []) {
+  static async exec(command: Command<unknown, unknown>, input: string[] = []) {
     if(input.includes("--help") || input.includes("-h"))
       return command.showHelp();
     const { args, opts } = parseArguments(Command.globalOptions + command.pattern, input) as any;
@@ -175,7 +175,7 @@ export class SamerArtisan {
    * Call a command by base
   */
   static async call(base: string, input: string[] = []) {
-    const similarCommands: Record<string, Command> = {};
+    const similarCommands: Record<string, Command<unknown, unknown>> = {};
     for(const command of this.$resolvedCommands) {
       if(command.base === base)
         return await this.exec(command, input);

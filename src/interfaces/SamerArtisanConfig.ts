@@ -19,5 +19,5 @@ export interface SamerArtisanConfig {
   /**
    * Additional commands instance or path
   */
-  commands: (string | Command)[];
+  commands: (string | Command<any, any>)[];
 }
