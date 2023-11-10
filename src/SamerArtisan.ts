@@ -13,10 +13,11 @@ export class SamerArtisan {
   static $config: SamerArtisanConfig = {
     root: "",
     name: "SamerArtisan",
-    cacheDist: "node-artisan.json",
     load: [],
     commands: []
   };
+  
+  static $cacheDist = join(__dirname, "cache.json");
   
   /**
    * Command instances
@@ -47,27 +48,14 @@ export class SamerArtisan {
     return this;
   }
   
-  /**
-   * Specify cache distination
-  */
-  static cacheDist(path: string) {
-    this.$config.cacheDist = this.$resolvePath(path);
-    return this;
-  }
-  
-  /**
-   * Specify load directories
-  */
-  static loadFrom(dirs: string[]) {
-    this.$config.load = dirs;
-    return this;
-  }
-  
+
   /**
    * Add load directory
   */
-  static load(dir: string) {
-    this.$config.load.push(dir);
+  static load(dir: string | string[]) {
+    if(typeof dir === "string")
+      this.$config.load.push(dir);
+    else this.$config.load.push(...dir);
     return this;
   }
   
@@ -105,9 +93,9 @@ export class SamerArtisan {
   /**
    * Returns cached commands
   */
-  static get $cacheCommandsPath(): string[] {
+  static get $cachedCommandsPath(): string[] {
     try {
-      return require(this.$config.cacheDist);
+      return require(this.$cacheDist);
     } catch(err) {
       return [];
     }
@@ -138,7 +126,7 @@ export class SamerArtisan {
     });
     
     if(this.$config.load.length > 0) {
-      commandPaths.push(...this.$cacheCommandsPath);
+      commandPaths.push(...this.$cachedCommandsPath);
     }
     const importPromises = commandPaths.map(path => this.$getCommand(path))
     this.$resolvedCommands.push(...await Promise.all(importPromises));

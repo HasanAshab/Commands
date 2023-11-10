@@ -10,6 +10,7 @@ SamerArtisan.commands([
   new ListCommands(SamerArtisan)
 ]);
 
+
 export { SamerArtisan };
 export * from "./commands/Command";
 export * from "./interfaces/SamerArtisanConfig";

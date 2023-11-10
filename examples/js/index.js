@@ -6,14 +6,13 @@ class CustomCommand extends Command {
   description = "For testing Custom added"
   
   async handle() {
-    console.log(this.config)
+    console.log(this)
   }
 }
 
 
 SamerArtisan
   .root(__dirname)
-  .cacheDist("cache/artisan.json")
   .load("commands")
   .add(new CustomCommand())
   .parse();

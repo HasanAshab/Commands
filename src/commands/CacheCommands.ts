@@ -17,7 +17,6 @@ export default class CacheCommands extends Command {
    * Its nessesary only when using load() or loadFrom()
   */
   async handle() {
-    const absoluteCacheDist = this.samerArtisan.$config.cacheDist;
     const paths: string[] = [];
     for(const dir of this.samerArtisan.$config.load) {
       const files = readdirSync(this.samerArtisan.$resolvePath(dir));
@@ -32,10 +31,9 @@ export default class CacheCommands extends Command {
         paths.push(fullPath)
       }
     }
-    mkdirSync(dirname(absoluteCacheDist), { recursive: true })
-    writeFileSync(absoluteCacheDist, JSON.stringify(paths));
+    writeFileSync(this.samerArtisan.$cacheDist, JSON.stringify(paths));
     
-    this.info(`\nCache saved in path: "${absoluteCacheDist}"`);
+    this.info(`\nCommands cached successfully`);
   }
 }
 

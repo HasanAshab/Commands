@@ -1,6 +1,6 @@
 export interface CommandMetadata {
   /**
-   * First part of the signature devided by space 
+   * First part of the signature devided by space.
   */
   base?: string;
   

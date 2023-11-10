@@ -12,11 +12,6 @@ export interface SamerArtisanConfig {
   name: string;
   
   /**
-   * Commands cache distination
-  */
-  cacheDist: string;
-  
-  /**
    * Directories from where commands will be discovered
   */
   load: string[];
