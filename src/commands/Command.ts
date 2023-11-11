@@ -65,10 +65,9 @@ export abstract class Command<
   public abstract handle(): any | Promise<any>;
   
   /**
-   * Setup the command to be executed with 
-   * parsed arguments and options.
-   * Using it as alternate of constructor to make it
-   * easier to inject
+   * Setup the command to be executed with parsed arguments and options.
+   * Using it as alternate of constructor to make it easier
+   * to inject dependencies
   */
   setup(args: Arguments, opts: Options & GlobalOptions): void {
     this.args = args;
@@ -175,19 +174,28 @@ export abstract class Command<
   /**
    * Prompt to choose option with autocompletion
   */
-  protected async anticipate(question: string, options: string[], fallback: string): Promise<string> {
+  protected async anticipate(question: string, options: string[]): Promise<string> {
+    let lastInput = "";
+    
     const choices = options.reduce((accumulator: Choice[], option: string) => {
       accumulator.push({ title: option });
       return accumulator;
     }, []);
-  
+    
     const { value } = await prompts({
       type: 'autocomplete',
       name: 'value',
       message: question,
-      choices
+      choices,
+      async suggest(input, choices) {
+        lastInput = input;
+        return choices.filter(i => {
+          return i.title.toLowerCase().slice(0, input.length) === input.toLowerCase();
+        });
+      }
     });
-    return value ?? fallback;
+    
+    return value ?? lastInput;
   }
 
   /**

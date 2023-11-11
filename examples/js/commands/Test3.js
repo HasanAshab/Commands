@@ -6,13 +6,8 @@ class Test extends Command {
 
   
   async handle() {
-    await this.withProgressBar(new Array(10).fill(0), (user) => {
-      return new Promise(r => {
-        setTimeout(() => {
-          r()
-        }, 2000)
-      })
-    });
+    const fruit = await this.anticipate("Do you want", ["apple", "mango"]);
+    console.log(fruit)
   }
 }
 

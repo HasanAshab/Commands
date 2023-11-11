@@ -1,18 +1,19 @@
 const { SamerArtisan, Command } = require("../../lib");
 
 
-class CustomCommand extends Command {
-  signature = "custom"
-  description = "For testing Custom added"
+class Greet extends Command {
   
-  async handle() {
-    console.log(this)
+  //This should be unique
+  signature = "greet";
+  
+  //This method will be invoked by SamerArtisan
+  handle() {
+    console.log("Hello user!");
   }
 }
 
-
 SamerArtisan
-  .root(__dirname)
+ // .root(__dirname)
   .load("commands")
-  .add(new CustomCommand())
+  .add(new Greet())
   .parse();
