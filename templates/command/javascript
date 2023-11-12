@@ -1,0 +1,22 @@
+const { Command } = require("samer-artisan");
+
+class {{name}} extends Command {
+  /**
+   * The unique signature of the command
+  */
+  signature = "command signature";
+  
+  /**
+   * Description of the command
+  */
+  description = "command description";
+  
+  /**
+   * Perform commands action
+  */
+  handle() {
+    this.info("{{name}} command works!");
+  }
+}
+
+module.exports = {{name}};

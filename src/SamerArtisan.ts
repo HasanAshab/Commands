@@ -11,7 +11,7 @@ export class SamerArtisan {
    * Default Config of Node Artisan
   */
   static $config: SamerArtisanConfig = {
-    root: "",
+    root: process.cwd(),
     name: "SamerArtisan",
     load: [],
     commands: []
