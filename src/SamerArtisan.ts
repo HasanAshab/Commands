@@ -18,7 +18,10 @@ export class SamerArtisan {
     commands: []
   };
   
-  static $cacheDist = join(__dirname, "cache.json");
+  /**
+   * Loadable command file extentions
+  */
+  static $extentions = [".js", ".ts", ".mjs", ".cjs"];
   
   /**
    * Command instances
@@ -92,21 +95,6 @@ export class SamerArtisan {
   }
 
   /**
-   * Returns cached commands
-  */
-  /*
-  static get $cachedCommandsPath(): string[] {
-    try {
-      return require(this.$cacheDist);
-    } catch(err) {
-      return [];
-    }
-  }
-  */
-  
-  
-  
-  /**
    * Get command class from path
   */
   static async $getCommand(path: string): Promise<Command> {
@@ -140,7 +128,7 @@ export class SamerArtisan {
     for(const dir of this.$config.load) {
       const files = readdirSync(this.$resolvePath(dir));
       for(const fileName of files) {
-        if(!fileName.endsWith(".js") && !fileName.endsWith(".ts")) continue;
+        if(!this.$extentions.some(ext => fileName.endsWith(ext))) continue;
         const fullPath = this.$resolvePath(dir, fileName);
         const command = await this.$getCommand(fullPath);
         if(!(command instanceof Command))
