@@ -5,6 +5,7 @@ import { consoleError } from "./exceptions/console";
 import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
 import { join } from "path";
+import { readdirSync } from "fs";
 
 export class SamerArtisan {
   /**
@@ -93,6 +94,7 @@ export class SamerArtisan {
   /**
    * Returns cached commands
   */
+  /*
   static get $cachedCommandsPath(): string[] {
     try {
       return require(this.$cacheDist);
@@ -100,6 +102,9 @@ export class SamerArtisan {
       return [];
     }
   }
+  */
+  
+  
   
   /**
    * Get command class from path
@@ -115,23 +120,41 @@ export class SamerArtisan {
   }
   
   /**
-   * Get all registered command classes
+   * Resolve command classes those are registered using add()
   */
-  static async $resolveCommands(): Promise<void> {
+  static async $resolveAddedCommands(): Promise<void> {
     const commandPaths: string[] = [];
     this.$config.commands.forEach(command => {
       if(typeof command === "string")
         commandPaths.push(this.$resolvePath(command));
       else this.$resolvedCommands.push(command);
     });
-    
-    if(this.$config.load.length > 0) {
-      commandPaths.push(...this.$cachedCommandsPath);
-    }
     const importPromises = commandPaths.map(path => this.$getCommand(path))
     this.$resolvedCommands.push(...await Promise.all(importPromises));
   }
   
+  /**
+   * Resolve command classes from loaded directories
+  */
+  static async $resolveCommandsFromLoadedDirs() {
+    for(const dir of this.$config.load) {
+      const files = readdirSync(this.$resolvePath(dir));
+      for(const fileName of files) {
+        if(!fileName.endsWith(".js") && !fileName.endsWith(".ts")) continue;
+        const fullPath = this.$resolvePath(dir, fileName);
+        const command = await this.$getCommand(fullPath);
+        if(!(command instanceof Command))
+          consoleError(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`);
+        if(!command.signature)
+          consoleError(`Signature required in command: "${join(dir, fileName)}"`);
+        this.$resolvedCommands.push(command);
+      }
+    }
+  }
+  
+  /**
+   * Checks if there is any duplicate signatures from resolved commands
+  */
   static $assertBaseSignaturesAreUnique() {
     const usedBaseSignatures: string[] = [];
     this.$resolvedCommands.forEach(command => {
@@ -198,9 +221,12 @@ export class SamerArtisan {
    * Parse arguments and start cli
   */
   static async parse(args = process.argv) {
-    await this.$resolveCommands();
-    this.$assertBaseSignaturesAreUnique();
+    await Promise.all([
+      this.$resolveCommandsFromLoadedDirs(),
+      this.$resolveAddedCommands()
+    ]);
     
+    this.$assertBaseSignaturesAreUnique();
     const [baseInput, ...argsAndOpts] = args.splice(2);
     if(baseInput && baseInput !== "--help" && baseInput !== "-h")
       return await this.call(baseInput, argsAndOpts)

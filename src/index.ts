@@ -7,7 +7,7 @@ import MakeCommand from "./commands/MakeCommand";
  * Registering the core commands of SamerArtisan
 */
 SamerArtisan.commands([
-  new CacheCommands(SamerArtisan),
+ // new CacheCommands(SamerArtisan),
   new ListCommands(SamerArtisan),
   new MakeCommand(SamerArtisan)
 ]);

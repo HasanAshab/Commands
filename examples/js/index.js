@@ -11,12 +11,11 @@ class Greet extends Command {
     console.log("Hello user!");
   }
 }
-imprv suggest simm
 
-
+console.time()
 SamerArtisan
   .root(__dirname)
   .load("commands")
-  .load("external/generators")
   .add(new Greet())
-  .parse();
+  .parse()
+  .then(() => console.timeEnd());
