@@ -12,10 +12,8 @@ class Greet extends Command {
   }
 }
 
-console.time()
 SamerArtisan
   .root(__dirname)
   .load("commands")
   .add(new Greet())
   .parse()
-  .then(() => console.timeEnd());
