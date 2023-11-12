@@ -11,7 +11,7 @@ interface Options {
 
 export default class MakeCommand extends Command<{ name: string }, Options> {
   signature = "make:command {name: Name of the command} {--dir= : Directory where the command will be putted } { --ts : Generate typescript template } { --f|force : Overwrite existing file }";
-  description = "Generates custom command";
+  description = "Generates command component";
   
   constructor(private readonly samerArtisan: typeof SamerArtisan) {
     super();
