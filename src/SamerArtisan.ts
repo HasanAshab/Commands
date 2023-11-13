@@ -178,12 +178,16 @@ export class SamerArtisan {
   /**
    * Execute a command
   */
-  static async exec(command: Command<unknown, unknown>, input: string[] = []) {
+  static exec(command: Command<unknown, unknown>, input: string[] = []) {
     if(input.includes("--help") || input.includes("-h"))
       return command.showHelp();
-    const { args, opts } = parseArguments(Command.globalOptions + command.pattern, input) as any;
-    command.setup(args, opts);
-    await command.handle();
+    return new Promise<void>((resolve, reject) => {
+      const { args, opts } = parseArguments(Command.globalOptions + command.pattern, input) as any;
+      command.setup(args, opts);
+      if(command.handle.length > 0)
+        command.handle(resolve);
+      else command.handle().then(resolve).catch(reject);
+    });
   }
   
   /**

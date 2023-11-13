@@ -17,3 +17,4 @@ SamerArtisan
   .load("commands")
   .add(new Greet())
   .parse()
+  //.then(() => process.exit())

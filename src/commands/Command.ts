@@ -62,7 +62,7 @@ export abstract class Command<
   /**
    * Perform the command action
   */
-  public abstract handle(): any | Promise<any>;
+  public abstract handle(done?: () => void): any | Promise<any>;
   
   /**
    * Setup the command to be executed with parsed arguments and options.

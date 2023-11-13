@@ -28,6 +28,5 @@ function calculateLevenshteinDistance(str1: string, str2: string): number {
 
 export function analyseSimilarity(str1: string, str2: string, threshold: number): number {
   const distance = calculateLevenshteinDistance(str1, str2);
-  console.log(str2, distance)
   return distance <= threshold ? distance : -1;
 }
