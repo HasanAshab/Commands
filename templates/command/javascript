@@ -1,18 +1,18 @@
 const { Command } = require("samer-artisan");
 
 class {{name}} extends Command {
-  /**
-   * The unique signature of the command
+ /**
+  * The name and signature of the console command.
   */
   signature = "command signature";
   
-  /**
-   * Description of the command
+ /**
+  * The console command description.
   */
   description = "command description";
   
-  /**
-   * Perform commands action
+ /**
+  * Execute the command
   */
   handle() {
     this.info("{{name}} command works!");

@@ -1,7 +1,7 @@
 import { Command } from "./commands/Command";
+import ConsoleIO from "./ConsoleIO";
 import type { SamerArtisanConfig, SimilarCommand } from "./interfaces";
 import { parseArguments, analyseSimilarity } from "./utils";
-import { consoleError } from "./exceptions/console";
 import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
 import { join } from "path";
@@ -104,7 +104,7 @@ export class SamerArtisan {
       ? fileData
       : fileData.default;
     if(typeof CommandClass !== "function")
-      consoleError(`No command class found from path: "${path}"`);
+      ConsoleIO.fail(`No command class found from path: "${path}"`);
     return new CommandClass;
   }
   
@@ -133,9 +133,9 @@ export class SamerArtisan {
         const fullPath = this.$resolvePath(dir, fileName);
         const command = await this.$getCommand(fullPath);
         if(!(command instanceof Command))
-          consoleError(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`);
+          ConsoleIO.fail(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`);
         if(!command.signature)
-          consoleError(`Signature required in command: "${join(dir, fileName)}"`);
+          ConsoleIO.fail(`Signature required in command: "${join(dir, fileName)}"`);
         this.$resolvedCommands.push(command);
       }
     }
@@ -148,7 +148,7 @@ export class SamerArtisan {
     const usedBaseSignatures: string[] = [];
     this.$resolvedCommands.forEach(command => {
       if(usedBaseSignatures.includes(command.base))
-        consoleError(`Signature "${command.base}" used in multiple commands.`);
+        ConsoleIO.fail(`Signature "${command.base}" used in multiple commands.`);
       usedBaseSignatures.push(command.base);
     });
   }
@@ -156,23 +156,12 @@ export class SamerArtisan {
   /**
    * Suggest similar commands 
   */
-  static async $suggestSimilars(base: string, similarCommands: Record<string, SimilarCommand>) {
+  static $suggestSimilars(base: string, similarCommands: Record<string, SimilarCommand>) {
     const similars = Object.keys(similarCommands).sort((x, y) => {
       return similarCommands[x].distance - similarCommands[y].distance;
     });
-    
-    const choices = similars.reduce((accumulator: Choice[], signature: string) => {
-      accumulator.push({ title: signature, value: signature });
-      return accumulator;
-    }, []);
-    
-    const { value } = await prompts({
-      type: 'select',
-      name: 'value',
-      message: `Command "${base}" is not defined\n Did you mean one of these`,
-      choices
-    });
-    return value;
+
+    return ConsoleIO.choice(`Command "${base}" is not defined\n Did you mean one of these`, similars, 0);
   }
   
   /**
@@ -211,7 +200,7 @@ export class SamerArtisan {
     }
     
     if (similarCommandsCount === 0)
-      consoleError("No Command Found", `(use "list" to display available commands)`);
+      ConsoleIO.fail("No Command Found", `(use "list" to display available commands)`);
 
     const newBase = await this.$suggestSimilars(base, similarCommands);
     await this.exec(similarCommands[newBase].command, input);

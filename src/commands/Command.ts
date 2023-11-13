@@ -1,16 +1,9 @@
+import ConsoleIO from "../ConsoleIO";
 import type { SamerArtisanConfig, GlobalOptions, CommandMetadata } from "../interfaces";
-import { green, yellow, black, red, white, bgRed } from "chalk";
-import prompts, { Choice } from "prompts";
-import Table from "cli-table";
-import { SingleBar, Presets } from 'cli-progress';
+import chalk from "chalk";
 import { parseDescriptions } from "../utils";
-import { consoleError } from "../exceptions/console";
 
-
-export abstract class Command<
-  Arguments = Record<string, string | null>,
-  Options = Record<string, boolean | string | null>
-> {
+export abstract class Command<Arguments = Record<string, string | null>, Options = Record<string, boolean | string | null>> extends ConsoleIO {
   
   /**
    * Global options those are available across every command
@@ -28,9 +21,9 @@ export abstract class Command<
     let optsList = "";
     for(const name in opts) {
       const padding = ' '.repeat(20 - name.length);
-      optsList += `  ${green(name)}${padding}${opts[name] ?? ""}\n`;
+      optsList += `  ${chalk.green(name)}${padding}${opts[name] ?? ""}\n`;
     }
-    console.log(`${yellow("Options")}:\n${optsList}`);
+    console.log(`${chalk.yellow("Options")}:\n${optsList}`);
   }
   
   /**
@@ -108,168 +101,7 @@ export abstract class Command<
     return option;
   }
   
-  /**
-   * Ask question
-  */
-  protected async ask(question: string): Promise<string> {
-    const { value } = await prompts({
-      type: 'text',
-      name: "value",
-      message: question
-    });
-    return value;
-  }
-  
-  /**
-   * Ask for secret details such as password
-  */
-  protected async secret(question: string): Promise<string> {
-    const { value } = await prompts({
-      type: 'invisible',
-      name: 'value',
-      message: question,
-    });
-    return value;
-  }
-  
-  /**
-   * Ask for confirmation
-  */
-  protected async confirm(question: string, initial = false): Promise<boolean> {
-    const { value } = await prompts({
-      type: 'toggle',
-      name: 'value',
-      message: question,
-      initial,
-      active: 'yes',
-      inactive: 'no',
-    });
-    return value;
-  }
-  
-  /**
-   * Prompt to choose single or multiple options
-  */
-  protected async choice<T extends string[], Y extends number>(question: string, options: T, initial?: Y, allowMultipleSelections = false): Promise<T[Y]> {
-    if (initial && options.length <= initial) {
-      throw new Error('invalid initial option index');
-    }
-  
-    const choices = options.reduce((accumulator: Choice[], option: string) => {
-      accumulator.push({ title: option, value: option });
-      return accumulator;
-    }, []);
-  
-    const { value } = await prompts({
-      type: allowMultipleSelections ? 'multiselect' : 'select',
-      name: 'value',
-      message: question,
-      choices,
-      initial,
-    });
-  
-    return value;
-  }
-  
-  /**
-   * Prompt to choose option with autocompletion
-  */
-  protected async anticipate(question: string, options: string[]): Promise<string> {
-    let lastInput = "";
-    
-    const choices = options.reduce((accumulator: Choice[], option: string) => {
-      accumulator.push({ title: option });
-      return accumulator;
-    }, []);
-    
-    const { value } = await prompts({
-      type: 'autocomplete',
-      name: 'value',
-      message: question,
-      choices,
-      async suggest(input, choices) {
-        lastInput = input;
-        return choices.filter(i => {
-          return i.title.toLowerCase().slice(0, input.length) === input.toLowerCase();
-        });
-      }
-    });
-    
-    return value ?? lastInput;
-  }
-
-  /**
-   * Log valueable information
-  */
-  protected info(message: string): void {
-    console.log(green(message));
-  }
-  
-  /**
-   * Log comment
-  */
-  protected comment(message: string): void {
-    console.log(black(message));
-  }  
-  
-  /**
-   * Log message only if verbose flagged
-  */
-  protected verbose(message: string): void {
-    this.option("verbose") && console.log(message);
-  }
-  
-  /**
-   * Log error message
-  */
-  protected error(message: string): void {
-    console.log(red(message));
-  }
-  
-  /**
-   * Log table data
-  */
-  protected table(head: string[], data: string[][]): void {
-    const table = new Table({ head });
-    table.push(...data);
-    console.log(table.toString())
-  }
-  
-  /**
-   * Process data with progress bar
-  */
-  protected async withProgressBar<T extends any>(data: T[], processor: (item: T) => any | Promise<any>): Promise<void> {
-    const bar1 = new SingleBar({}, Presets.shades_classic);
-    bar1.start(100, 0);
-    const precessPromises = data.map(async item => {
-      await processor(item);
-      bar1.increment(100 / data.length);
-    });
-    await Promise.all(precessPromises);
-    bar1.stop();
-  }
-  
-  /**
-   * Log warning message
-  */
-  protected warn(message: string): void {
-    console.log(black.bgYellow(` WARNING `) + ' ' + message);
-  }
-  
-  /**
-   * Log alert message
-  */
-  protected alert(message: string): void {
-    console.log(white.bgRed(` ALERT `) + ' ' + message);
-  }
-  
-  /**
-   * Log error message and terminate command
-  */
-  protected fail(message: string, recommendHelpFlag?: boolean | string): void {
-    consoleError(message, recommendHelpFlag);
-  }
-  
+ 
   /**
    * Get command base signature
   */
@@ -307,7 +139,7 @@ export abstract class Command<
   */
   showHelp() {
     if(this.description) {
-      console.log(`${yellow("Description")}:\n  ${this.description}\n`);
+      console.log(`${chalk.yellow("Description")}:\n  ${this.description}\n`);
     }
     const { args, opts } = parseDescriptions(Command.globalOptions + this.pattern) as any;
     if(args) {
@@ -318,16 +150,16 @@ export abstract class Command<
         const description = args[name];
         if(description)
           hasAtleastOneArgument = true;
-        argsList += `  ${green(name)}${padding}${description ?? ""}\n`;
+        argsList += `  ${chalk.green(name)}${padding}${description ?? ""}\n`;
       }
-      hasAtleastOneArgument && console.log(`${yellow("Arguments")}:\n${argsList}`);
+      hasAtleastOneArgument && console.log(`${chalk.yellow("Arguments")}:\n${argsList}`);
     }
     
     let optsList = "";
     for(const name in opts) {
       const padding = ' '.repeat(20 - name.length);
-      optsList += `  ${green(name)}${padding}${opts[name] ?? ""}\n`;
+      optsList += `  ${chalk.green(name)}${padding}${opts[name] ?? ""}\n`;
     }
-    console.log(`${yellow("Options")}:\n${optsList}`);
+    console.log(`${chalk.yellow("Options")}:\n${optsList}`);
   }
 }
