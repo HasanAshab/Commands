@@ -150,8 +150,8 @@ export abstract class Command<
   /**
    * Prompt to choose single or multiple options
   */
-  protected async choice<T extends string[], Y extends number>(question: string, options: T, initial: Y, allowMultipleSelections = false): Promise<T[Y]> {
-    if (options.length <= initial) {
+  protected async choice<T extends string[], Y extends number>(question: string, options: T, initial?: Y, allowMultipleSelections = false): Promise<T[Y]> {
+    if (initial && options.length <= initial) {
       throw new Error('invalid initial option index');
     }
   

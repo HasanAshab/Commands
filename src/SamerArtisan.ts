@@ -1,11 +1,12 @@
 import { Command } from "./commands/Command";
-import type { SamerArtisanConfig } from "./interfaces";
+import type { SamerArtisanConfig, SimilarCommand } from "./interfaces";
 import { parseArguments, analyseSimilarity } from "./utils";
 import { consoleError } from "./exceptions/console";
 import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
 import { join } from "path";
 import { readdirSync } from "fs";
+
 
 export class SamerArtisan {
   /**
@@ -155,14 +156,18 @@ export class SamerArtisan {
   /**
    * Suggest similar commands 
   */
-  static async $suggestSimilars(base: string, similars: string[]) {
-    const choices = similars.sort().reduce((accumulator: Choice[], signature: string) => {
-      accumulator.push({ title: signature });
+  static async $suggestSimilars(base: string, similarCommands: Record<string, SimilarCommand>) {
+    const similars = Object.keys(similarCommands).sort((x, y) => {
+      return similarCommands[x].distance - similarCommands[y].distance;
+    });
+    
+    const choices = similars.reduce((accumulator: Choice[], signature: string) => {
+      accumulator.push({ title: signature, value: signature });
       return accumulator;
     }, []);
-  
+    
     const { value } = await prompts({
-      type: 'autocomplete',
+      type: 'select',
       name: 'value',
       message: `Command "${base}" is not defined\n Did you mean one of these`,
       choices
@@ -185,31 +190,27 @@ export class SamerArtisan {
    * Call a command by base
   */
   static async call(base: string, input: string[] = []) {
-    const similarCommands: Record<string, {
-      distance: number;
-      command: Command<unknown, unknown>;
-    }> = {};
+    let similarCommandsCount = 0;
+    const similarCommands: Record<string, SimilarCommand> = {};
     
     for(const command of this.$resolvedCommands) {
       if(command.base === base)
         return await this.exec(command, input);
-      const distance = analyseSimilarity(base, command.base, 3);
-      if (distance !== -1)
-        similarCommands[command.base] = { distance, command };
+      
+      if(similarCommandsCount <= 5) {
+        const distance = analyseSimilarity(base, command.base, 3);
+        if (distance !== -1) {
+          similarCommands[command.base] = { distance, command };
+          similarCommandsCount++;
+        }
+      }
     }
     
-    const similars = Object.keys(similarCommands).sort((x, y) => {
-      return similarCommands[x].distance - similarCommands[y].distance;
-    });
-    
-    console.log(similars)
-    
-    if (similars.length === 0)
+    if (similarCommandsCount === 0)
       consoleError("No Command Found", true);
 
-    const newBase = await this.$suggestSimilars(base, similars);
-    if(newBase)
-      await this.exec(similarCommands[newBase].command, input);
+    const newBase = await this.$suggestSimilars(base, similarCommands);
+    await this.exec(similarCommands[newBase].command, input);
   }
   
   /**
