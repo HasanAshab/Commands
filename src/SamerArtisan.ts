@@ -104,7 +104,7 @@ export class SamerArtisan {
       ? fileData
       : fileData.default;
     if(typeof CommandClass !== "function")
-      consoleError(`No command class found from path: "${path}"`, true);
+      consoleError(`No command class found from path: "${path}"`);
     return new CommandClass;
   }
   
@@ -202,7 +202,7 @@ export class SamerArtisan {
         return await this.exec(command, input);
       
       if(similarCommandsCount <= 5) {
-        const distance = analyseSimilarity(base, command.base, 3);
+        const distance = command.base.startsWith(base) ? 0 : analyseSimilarity(base, command.base, 3);
         if (distance !== -1) {
           similarCommands[command.base] = { distance, command };
           similarCommandsCount++;
@@ -211,7 +211,7 @@ export class SamerArtisan {
     }
     
     if (similarCommandsCount === 0)
-      consoleError("No Command Found", true);
+      consoleError("No Command Found", `(use "list" to display available commands)`);
 
     const newBase = await this.$suggestSimilars(base, similarCommands);
     await this.exec(similarCommands[newBase].command, input);

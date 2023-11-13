@@ -52,7 +52,7 @@ export default class MakeCommand extends Command<{ name: string }, Options> {
     try {
       writeFileSync(dist, content, { flag: "wx" });
     } catch {
-      this.fail("File already exist! (use -f to overwrite)");
+      this.fail("File already exist!", "(use -f to overwrite)");
     }
   }
 }

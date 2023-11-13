@@ -266,7 +266,7 @@ export abstract class Command<
   /**
    * Log error message and terminate command
   */
-  protected fail(message: string, recommendHelpFlag = false): void {
+  protected fail(message: string, recommendHelpFlag?: boolean | string): void {
     consoleError(message, recommendHelpFlag);
   }
   
