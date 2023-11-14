@@ -10,6 +10,22 @@ import { readdirSync } from "fs";
 
 export class SamerArtisan {
   /**
+   * Loadable command file extentions
+   */
+  static readonly EXTENTIONS = [".js", ".ts", ".mjs", ".cjs"];
+  
+  /**
+   * Max number of similar command suggestions, if no command matched 
+   */
+  static readonly MAX_SIMILAR_COMMAND_SUGGESTIONS = 5;
+  
+  /**
+   * Commands which have less distance than this will be counted as similar
+   */
+  static readonly LEVENSHTEIN_DISTANCE_THRESHOLD = 3;
+  
+  
+  /**
    * Default Config of Node Artisan
   */
   static $config: SamerArtisanConfig = {
@@ -18,11 +34,6 @@ export class SamerArtisan {
     load: [],
     commands: []
   };
-  
-  /**
-   * Loadable command file extentions
-  */
-  static $extentions = [".js", ".ts", ".mjs", ".cjs"];
   
   /**
    * Command instances
@@ -129,7 +140,7 @@ export class SamerArtisan {
     for(const dir of this.$config.load) {
       const files = readdirSync(this.$resolvePath(dir));
       for(const fileName of files) {
-        if(!this.$extentions.some(ext => fileName.endsWith(ext))) continue;
+        if(!this.EXTENTIONS.some(ext => fileName.endsWith(ext))) continue;
         const fullPath = this.$resolvePath(dir, fileName);
         const command = await this.$getCommand(fullPath);
         if(!(command instanceof Command))
@@ -156,12 +167,28 @@ export class SamerArtisan {
   /**
    * Suggest similar commands 
   */
-  static $suggestSimilars(base: string, similarCommands: Record<string, SimilarCommand>) {
+  static async $suggestSimilars(base: string) {
+    let similarCommandsCount = 0;
+    const similarCommands: Record<string, SimilarCommand> = {};
+    
+    for(const command of this.$resolvedCommands) {
+      if(similarCommandsCount === this.MAX_SIMILAR_COMMAND_SUGGESTIONS) break;
+      const distance = command.base.startsWith(base) ? 0 : analyseSimilarity(base, command.base, this.LEVENSHTEIN_DISTANCE_THRESHOLD);
+      if (distance !== -1) {
+        similarCommands[command.base] = { distance, command };
+        similarCommandsCount++;
+      }
+    }
+    
+    if (similarCommandsCount === 0)
+      return null;
+
     const similars = Object.keys(similarCommands).sort((x, y) => {
       return similarCommands[x].distance - similarCommands[y].distance;
     });
-
-    return ConsoleIO.choice(`Command "${base}" is not defined\n Did you mean one of these`, similars, 0);
+    
+    const choosedBase = await ConsoleIO.choice(`Command "${base}" is not defined\n Did you mean one of these`, similars, 0);
+    return similarCommands[choosedBase].command;
   }
   
   /**
@@ -183,27 +210,11 @@ export class SamerArtisan {
    * Call a command by base
   */
   static async call(base: string, input: string[] = []) {
-    let similarCommandsCount = 0;
-    const similarCommands: Record<string, SimilarCommand> = {};
-    
-    for(const command of this.$resolvedCommands) {
-      if(command.base === base)
-        return await this.exec(command, input);
-      
-      if(similarCommandsCount <= 5) {
-        const distance = command.base.startsWith(base) ? 0 : analyseSimilarity(base, command.base, 3);
-        if (distance !== -1) {
-          similarCommands[command.base] = { distance, command };
-          similarCommandsCount++;
-        }
-      }
-    }
-    
-    if (similarCommandsCount === 0)
+    let command = this.$resolvedCommands.find(command => command.base === base)
+      ?? await this.$suggestSimilars(base);
+    if(!command)
       ConsoleIO.fail("No Command Found", `(use "list" to display available commands)`);
-
-    const newBase = await this.$suggestSimilars(base, similarCommands);
-    await this.exec(similarCommands[newBase].command, input);
+    await this.exec(command, input);
   }
   
   /**

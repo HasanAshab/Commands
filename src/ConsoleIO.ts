@@ -4,12 +4,17 @@ import { SingleBar, Presets } from 'cli-progress';
 import chalk from "chalk";
 
 export default class ConsoleIO {
+  static readonly OPTIONS = {
+    onCancel: (prompt: any) => process.exit(0)
+  }
+
+  
   static async ask(question: string): Promise<string> {
     const { value } = await prompts({
       type: 'text',
       name: "value",
       message: question
-    });
+    }, ConsoleIO.OPTIONS);
     return value;
   }
 
@@ -18,7 +23,7 @@ export default class ConsoleIO {
       type: 'invisible',
       name: 'value',
       message: question,
-    });
+    }, ConsoleIO.OPTIONS);
     return value;
   }
 
@@ -30,7 +35,7 @@ export default class ConsoleIO {
       initial,
       active: 'yes',
       inactive: 'no',
-    });
+    }, ConsoleIO.OPTIONS);
     return value;
   }
 
@@ -50,7 +55,7 @@ export default class ConsoleIO {
       message: question,
       choices,
       initial,
-    });
+    }, ConsoleIO.OPTIONS);
   
     return value;
   }
@@ -74,7 +79,7 @@ export default class ConsoleIO {
           return i.title.toLowerCase().slice(0, input.length) === input.toLowerCase();
         });
       }
-    });
+    }, ConsoleIO.OPTIONS);
     
     return value ?? lastInput;
   }
@@ -116,7 +121,7 @@ export default class ConsoleIO {
     console.log(chalk.white.bgRed(` ALERT `) + ' ' + message);
   }
 
-  static fail(message: string, recommendHelpFlag: boolean | string = false): void {
+  static fail(message: string, recommendHelpFlag: boolean | string = false): never {
     let helpMessage = "";
     if(recommendHelpFlag === true)
       helpMessage = "(use -h for help) ";
@@ -132,8 +137,6 @@ export default class ConsoleIO {
     console.log("\r");
     process.exit(1);
   }
-
-  // Corresponding non-static methods
 
   ask(question: string): Promise<string> {
     return ConsoleIO.ask(question);
@@ -183,7 +186,7 @@ export default class ConsoleIO {
     ConsoleIO.alert(message);
   }
 
-  fail(message: string, recommendHelpFlag?: boolean | string): void {
+  fail(message: string, recommendHelpFlag?: boolean | string): never {
     ConsoleIO.fail(message, recommendHelpFlag);
   }
 }

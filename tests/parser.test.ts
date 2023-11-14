@@ -1,4 +1,4 @@
-import { parseArguments, parseDescriptions } from '../src/utils/parser';
+import { parseArguments, parseDescriptions } from '../src/utils';
 
 // Argument
 it('Should parse args', () => {
