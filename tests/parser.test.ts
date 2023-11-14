@@ -197,8 +197,8 @@ it('Should parse descriptions for args, opts and input arrays', () => {
       users: 'Third arg'
     },
     opts: {
-      c: 'First opt',
-      dog: 'Second opt'
+      "--c": 'First opt',
+      "-d, --dog": 'Second opt'
     }
   };
 
@@ -216,9 +216,9 @@ it('Should parse descriptions for opts only', () => {
   const expected = {
     args: {},
     opts: {
-      foo: 'First option',
-      bar: 'Second option',
-      baz: 'Third option',
+      "--foo": 'First option',
+      "-b, --bar": 'Second option',
+      "-c, --baz": 'Third option',
     },
   };
 
@@ -579,10 +579,10 @@ it('Should parse description', () => {
       h: "option 8",
     },
     opts: {
-      a: "option 1",
-      b: "option 2",
-      c: "option 3",
-      i: "option 9",
+      "--a": "option 1",
+      "--b": "option 2",
+      "-c, --cat": "option 3",
+      "--i": "option 9",
     },
   };
 
