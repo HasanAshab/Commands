@@ -9,7 +9,7 @@ export interface SamerArtisanConfig {
   /**
    * Name of the CLI
   */
-  name: string;
+  name: string | null;
   
   /**
    * Directories from where commands will be discovered

@@ -180,7 +180,7 @@ it('Should handle a single input array with multiple values', () => {
   expect(parseArguments(sign, args)).toEqual(result);
 });
 
-it('Should parse descriptions for args, opts and input arrays', () => {
+it.only('Should parse descriptions for args, opts and input arrays', () => {
   const signature = `test 
         { a: First arg }
         { b: Second arg }

@@ -14,7 +14,8 @@ class Test extends Command {
         }, 1500)
       })
     });
-    console.log(fruit1, fruit2)
+    console.log(fruit1)
+    console.log(fruit2)
   }
 }
 

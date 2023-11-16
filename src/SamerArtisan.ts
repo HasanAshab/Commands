@@ -15,12 +15,12 @@ export class SamerArtisan {
   static readonly EXTENTIONS = [".js", ".ts", ".mjs", ".cjs"];
   
   /**
-   * Max number of similar command suggestions, if no command matched 
+   * Max number of similar command suggestions to be displayed, when no command matched 
    */
   static readonly MAX_SIMILAR_COMMAND_SUGGESTIONS = 5;
   
   /**
-   * Commands which have less distance than this will be counted as similar
+   * Commands which have less levenshtein distance than this will be counted as similar
    */
   static readonly LEVENSHTEIN_DISTANCE_THRESHOLD = 3;
   
@@ -59,7 +59,7 @@ export class SamerArtisan {
   /**
    * Specify cache distination
   */
-  static projectName(name: string) {
+  static projectName(name: string | null) {
     this.$config.name = name;
     return this;
   }
@@ -231,7 +231,7 @@ export class SamerArtisan {
     if(baseInput && baseInput !== "--help" && baseInput !== "-h")
       return await this.call(baseInput, argsAndOpts)
     
-    console.log(textSync(this.$config.name), "\n\n");
+    this.$config.name && console.log(textSync(this.$config.name), "\n\n");
     Command.showGlobalOptions();
     await this.call("list");
   }

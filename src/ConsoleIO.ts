@@ -62,38 +62,21 @@ export default class ConsoleIO {
   }
 
   static async anticipate(question: string, options: string[] | ((input: string) => string[] | Promise<string[]>)): Promise<string> {
-    const formatOptions = (options: string[]) => options.reduce((accumulator: Choice[], option: string) => {
-      accumulator.push({ title: option });
+    const { default: autocomplete } = await import('inquirer-autocomplete-standalone');
+    const formatOptions = (options: string[]) => options.reduce((accumulator: { value: string }[], option: string) => {
+      accumulator.push({ value: option });
       return accumulator;
     }, []);
-      
-    let lastInput = "";
-    let choices: Choice[] = [];
     
-    if(Array.isArray(options)) {
-      choices = formatOptions(options)
-    }
-
-    const { value } = await prompts({
-      type: 'autocomplete',
-      name: 'value',
+    return await autocomplete({
       message: question,
-      choices,
-      suggest: async (input, choices) => {
-        //use mutex
-        lastInput = input;
-        if(Array.isArray(options))
-          return choices.filter(choice => choice.title.toLowerCase().startsWith(input.toLowerCase()));
-        while(choices.length > 0) {
-          choices.pop();
-        }
-        choices.push(...formatOptions(await options(input)));
-        return choices;
+      source: async (input = "") => {
+        if(!Array.isArray(options))
+          return formatOptions(await options(input));
+        const sortedOptions = options.filter(option => option.toLowerCase().startsWith(input.toLowerCase()));
+        return formatOptions(sortedOptions);
       }
-      
-    }, ConsoleIO.OPTIONS);
-    
-    return value ?? lastInput;
+    });
   }
 
   static info(message: string): void {

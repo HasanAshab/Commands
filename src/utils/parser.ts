@@ -70,7 +70,7 @@ const addArgumentsValue = (obj, inputs) => {
       let i = 0;
       while (i < inputs.length && inputs[i] !== key) i++;
       if (i === inputs.length) 
-        ConsoleIO.fail("Too Few Arguments.", true)
+        ConsoleIO.fail("Too Few Arguments.", "(use -h for help)")
       obj[key].value = inputs.splice(i).slice(1);
     } else {
       if (inputs.length > 0) {
