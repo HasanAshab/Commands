@@ -180,7 +180,7 @@ it('Should handle a single input array with multiple values', () => {
   expect(parseArguments(sign, args)).toEqual(result);
 });
 
-it.only('Should parse descriptions for args, opts and input arrays', () => {
+it('Should parse descriptions for args, opts and input arrays', () => {
   const signature = `test 
         { a: First arg }
         { b: Second arg }
@@ -388,9 +388,9 @@ it('Should parse described opts', () => {
 it('Should parse described and non-described opts together', () => {
   const signature = `test 
         { --foo: First option }
-        { -b }
+        { --b }
         { -c|baz: Third option }`;
-  const args = ['--foo', '-b', '--baz'];
+  const args = ['--foo', '--b', '--baz'];
   const result = parseArguments(signature, args);
 
   const expected = {
