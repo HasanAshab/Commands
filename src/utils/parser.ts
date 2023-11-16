@@ -25,9 +25,9 @@ const parseSingleSignature = (i, signature, args, opts) => {
       key = '';
     } else if (signature[i] === '=') {
       let value = '';
-      while (signature[++i] !== '}' && signature[i] !== ' ')
+      while (signature[++i] !== '}' && signature[i] !== ' ' && signature[i] !== ':')
         value += signature[i];
-      obj.value = value === '' ? null : value;
+      obj.value = value === '' ? null: value;
       i--;
       if (obj.isFlag) obj.needsValue = true;
       else obj.isOptional = true;
@@ -37,7 +37,7 @@ const parseSingleSignature = (i, signature, args, opts) => {
     } else if (signature[i] === '*') {
       obj.value = [];
       obj.isArrayType = true;
-    }else if (signature[i] === ":"){
+    } else if (signature[i] === ":") {
       while (signature[++i] !== '}') {}
       i--
     }
@@ -69,14 +69,14 @@ const addArgumentsValue = (obj, inputs) => {
     if (obj[key].isArrayType) {
       let i = 0;
       while (i < inputs.length && inputs[i] !== key) i++;
-      if (i === inputs.length) 
-        ConsoleIO.fail("Too Few Arguments.", true)
+      if (i === inputs.length)
+        ConsoleIO.fail("Too Few Arguments.","(use -h for help)")
       obj[key].value = inputs.splice(i).slice(1);
     } else {
       if (inputs.length > 0) {
         obj[key].value = inputs.shift();
       } else if (!obj[key].isOptional) {
-        ConsoleIO.fail("Too Few Arguments.", true)
+        ConsoleIO.fail("Too Few Arguments.","(use -h for help)")
       }
     }
 
@@ -85,7 +85,7 @@ const addArgumentsValue = (obj, inputs) => {
   }
 
   if (inputs.length > 0)
-    ConsoleIO.fail("Too Many Arguments.", true)
+   ConsoleIO.fail("Too Many Arguments.", "(use -h for help)")
 };
 
 const addOptionsValue = (obj, inputs) => {
@@ -93,11 +93,11 @@ const addOptionsValue = (obj, inputs) => {
     for (let i = 0; i < inputs.length; i++) {
       const valIndex = inputs[i].indexOf('=');
       if (
-        inputs[i].slice(2, valIndex === -1 ? inputs[i].length : valIndex) ===
+        inputs[i].slice(2, valIndex === -1 ? inputs[i].length: valIndex) ===
         key
       ) {
         if (obj[key].needsValue) {
-         obj[key].value = inputs[i].slice(valIndex + 1);
+          obj[key].value = inputs[i].slice(valIndex + 1);
         } else {
           obj[key].value = true;
         }
@@ -118,8 +118,8 @@ const addOptionsValue = (obj, inputs) => {
     obj[key] = obj[key].value
   }
 
-  if (inputs.length > 0) 
-    ConsoleIO.fail("Unknown Option Specified.", true);
+  if (inputs.length > 0)
+    ConsoleIO.fail("Unknown Option Specified.", "(use -h for help)");
 };
 
 export function parseArguments(signature, inputs) {
@@ -144,36 +144,41 @@ export function parseDescriptions(signature) {
   for (let i = 0; i < signature.length; i++) {
     // checking : the new argument started or not
     if (signature[i] === '{') {
-     while (signature[++i] === " ") {}
+      while (signature[++i] === " ") {}
+      const isFlag = (signature[i] === '-');
       let key = '';
+      let shortKeys = '';
       let description = null;
-      let isFlag = false;
-
-      // checking the current signature is a flag or not
-      if (signature[i] === '-') {
-        isFlag = true;
-        i += 2;
-      }
-      const validKeys = /[a-zA-Z1-9]/;
+      const validKeys = /[a-zA-Z1-9\-]/;
       //looping thought the current signature for parsing the argument
       while (i < signature.length && signature[i] !== '}') {
+        
         if (validKeys.test(signature[i])) key += signature[i];
-        else if (signature[i] === '|') key = `-${key}, `;
-        else if (signature[i] === ':') {
+        
+        else if (signature[i] === "*" || signature[i] === "=") {
+          //skiping the unwanted values
+          while (signature[++i] !== ":") {}
+          i--;
+        } else if (signature[i] === '|') {
+          shortKeys += `${key.slice(1)}, `;
+          key = '--'
+        } else if (signature[i] === ':') {
           let desc = '';
           while (signature[++i] !== '}') desc += signature[i];
-
-          description = desc;
+          description = desc.trim();
           i--;
         }
         i++;
       }
-
-      // Now adding the result 
+      key = shortKeys + key
+      // Now adding the result
       if (isFlag) opts[key] = description;
       else args[key] = description;
     }
   }
 
-  return { args, opts };
+  return {
+    args,
+    opts
+  };
 }
