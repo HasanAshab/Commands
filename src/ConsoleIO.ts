@@ -39,7 +39,7 @@ export default class ConsoleIO {
     return value;
   }
 
-  static async choice<T extends string[], Y extends number>(question: string, options: T, initial?: Y, allowMultipleSelections = false): Promise<T[Y]> {
+  static async choice<T extends string[], Y extends number>(question: string, options: T, initial?: Y, allowMultipleSelections = false, max?: number): Promise<T[Y]> {
     if (initial && options.length <= initial) {
       throw new Error('invalid initial option index');
     }
@@ -55,30 +55,42 @@ export default class ConsoleIO {
       message: question,
       choices,
       initial,
+      max
     }, ConsoleIO.OPTIONS);
   
     return value;
   }
 
-  static async anticipate(question: string, options: string[]): Promise<string> {
-    let lastInput = "";
-    
-    const choices = options.reduce((accumulator: Choice[], option: string) => {
+  static async anticipate(question: string, options: string[] | ((input: string) => string[] | Promise<string[]>)): Promise<string> {
+    const formatOptions = (options: string[]) => options.reduce((accumulator: Choice[], option: string) => {
       accumulator.push({ title: option });
       return accumulator;
     }, []);
+      
+    let lastInput = "";
+    let choices: Choice[] = [];
     
+    if(Array.isArray(options)) {
+      choices = formatOptions(options)
+    }
+
     const { value } = await prompts({
       type: 'autocomplete',
       name: 'value',
       message: question,
       choices,
-      async suggest(input, choices) {
+      suggest: async (input, choices) => {
+        //use mutex
         lastInput = input;
-        return choices.filter(i => {
-          return i.title.toLowerCase().slice(0, input.length) === input.toLowerCase();
-        });
+        if(Array.isArray(options))
+          return choices.filter(choice => choice.title.toLowerCase().startsWith(input.toLowerCase()));
+        while(choices.length > 0) {
+          choices.pop();
+        }
+        choices.push(...formatOptions(await options(input)));
+        return choices;
       }
+      
     }, ConsoleIO.OPTIONS);
     
     return value ?? lastInput;
@@ -150,7 +162,7 @@ export default class ConsoleIO {
     return ConsoleIO.confirm(question, initial);
   }
 
-  choice<T extends string[], Y extends number>(question: string, options: T, initial?: Y, allowMultipleSelections = false): Promise<T[Y]> {
+  choice<T extends string[], Y extends number>(question: string, options: T, initial?: Y, allowMultipleSelections = false, max?: number): Promise<T[Y]> {
     return ConsoleIO.choice(question, options, initial, allowMultipleSelections);
   }
 

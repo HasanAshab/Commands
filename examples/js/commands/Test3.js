@@ -6,8 +6,15 @@ class Test extends Command {
 
   
   async handle() {
-    const fruit = await this.anticipate("Do you want", ["apple", "mango"]);
-    console.log(fruit)
+    //const fruit1 = await this.anticipate("Do you want", ["apple", "mango"])
+    const fruit2 = await this.anticipate("Do you want", input => {
+      return new Promise(r => {
+        setTimeout(() => {
+          r(["apple", "mango"].filter(option => option.startsWith(input.toLowerCase())))
+        }, 1500)
+      })
+    });
+    console.log(fruit1, fruit2)
   }
 }
 
