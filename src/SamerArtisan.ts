@@ -111,12 +111,22 @@ export class SamerArtisan {
   */
   static async $getCommand(path: string): Promise<Command> {
     const fileData = await import(path);
-    const CommandClass = typeof fileData === "function"
-      ? fileData
-      : fileData.default;
+    const CommandClass = typeof fileData.default === "function"
+      ? fileData.default
+      : fileData.default.default;
+    
     if(typeof CommandClass !== "function")
       ConsoleIO.fail(`No command class found from path: "${path}"`);
-    return new CommandClass;
+    
+    const command = new CommandClass();
+    
+    if(!(command instanceof Command))
+      ConsoleIO.fail(`Must extend to base "Command" class in command: "${path}"`);
+    
+    if(!command.signature)
+      ConsoleIO.fail(`Signature required in command: "${path}"`);
+    
+    return command;
   }
   
   /**
@@ -143,10 +153,6 @@ export class SamerArtisan {
         if(!this.EXTENTIONS.some(ext => fileName.endsWith(ext))) continue;
         const fullPath = this.$resolvePath(dir, fileName);
         const command = await this.$getCommand(fullPath);
-        if(!(command instanceof Command))
-          ConsoleIO.fail(`Must extend to base "Command" class in command: "${join(dir, fileName)}"`);
-        if(!command.signature)
-          ConsoleIO.fail(`Signature required in command: "${join(dir, fileName)}"`);
         this.$resolvedCommands.push(command);
       }
     }

@@ -4,8 +4,7 @@
     "module": "nodenext",
     "outDir": "./lib",
     "declaration": true,
-    "strict": true,
-    "esModuleInterop": true
+    "strict": true
   },
   "include": ["src"],
   "exclude": ["node_modules", "tests", "examples"]
