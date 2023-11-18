@@ -70,6 +70,7 @@ export default class ConsoleIO {
     
     return await autocomplete({
       message: question,
+      suggestOnly: true,
       source: async (input = "") => {
         if(!Array.isArray(options))
           return formatOptions(await options(input));
@@ -116,21 +117,13 @@ export default class ConsoleIO {
     console.log(chalk.white.bgRed(` ALERT `) + ' ' + message);
   }
 
-  static fail(message: string, recommendHelpFlag: boolean | string = false): never {
-    let helpMessage = "";
-    if(recommendHelpFlag === true)
-      helpMessage = "(use -h for help) ";
-    
-    else if(typeof recommendHelpFlag === "string")
-      helpMessage = recommendHelpFlag;
-    
-    const margin = " ".repeat(message.length + helpMessage.length + 3);
+  static fail(message: string, instruction = "") {
+    const margin = " ".repeat(message.length + instruction.length + 3);
     console.log("\r");
     console.log(chalk.bgRed(margin));
-    console.log(chalk.bgRed(` ${chalk.bold(message)}  ${helpMessage}`));
+    console.log(chalk.bgRed(` ${chalk.bold(message)}  ${instruction}`));
     console.log(chalk.bgRed(margin));
     console.log("\r");
-    process.exit(1);
   }
 
   ask(question: string): Promise<string> {
@@ -181,7 +174,7 @@ export default class ConsoleIO {
     ConsoleIO.alert(message);
   }
 
-  fail(message: string, recommendHelpFlag?: boolean | string): never {
-    ConsoleIO.fail(message, recommendHelpFlag);
+  fail(message: string, instruction?: string) {
+    ConsoleIO.fail(message, instruction);
   }
 }

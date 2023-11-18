@@ -16,5 +16,6 @@ SamerArtisan
   .root(__dirname)
   .load("commands")
   .add(new Greet())
+//  .add("ddd.js")
   .parse()
   //.then(() => process.exit())

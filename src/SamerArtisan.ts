@@ -1,12 +1,15 @@
-import { Command } from "./commands/Command";
-import ConsoleIO from "./ConsoleIO";
 import type { SamerArtisanConfig, SimilarCommand } from "./interfaces";
 import { parseArguments, analyseSimilarity } from "./utils";
 import prompts, { Choice } from "prompts";
 import { textSync } from "figlet";
 import { join } from "path";
 import { readdirSync } from "fs";
-
+import { Command } from "./commands/Command";
+import ConsoleIO from "./ConsoleIO";
+import ConsoleException from "./exceptions/ConsoleException";
+import CommandClassNotFoundException from "./exceptions/CommandClassNotFoundException";
+import DuplicateSignatureException from "./exceptions/DuplicateSignatureException";
+import CommandNotExistsException from "./exceptions/CommandNotExistsException";
 
 export class SamerArtisan {
   /**
@@ -115,31 +118,21 @@ export class SamerArtisan {
       ? fileData.default
       : fileData.default.default;
     
-    if(typeof CommandClass !== "function")
-      ConsoleIO.fail(`No command class found from path: "${path}"`);
-    
-    const command = new CommandClass();
-    
-    if(!(command instanceof Command))
-      ConsoleIO.fail(`Must extend to base "Command" class in command: "${path}"`);
-    
-    if(!command.signature)
-      ConsoleIO.fail(`Signature required in command: "${path}"`);
-    
-    return command;
+    if(typeof CommandClass === "function" && CommandClass.prototype instanceof Command)
+      return new CommandClass;
+    throw new CommandClassNotFoundException(path);
   }
   
   /**
    * Resolve command classes those are registered using add()
   */
   static async $resolveAddedCommands(): Promise<void> {
-    const commandPaths: string[] = [];
+    const importPromises: Promise<Command>[] = [];
     this.$config.commands.forEach(command => {
       if(typeof command === "string")
-        commandPaths.push(this.$resolvePath(command));
+        importPromises.push(this.$getCommand(this.$resolvePath(command)));
       else this.$resolvedCommands.push(command);
     });
-    const importPromises = commandPaths.map(path => this.$getCommand(path))
     this.$resolvedCommands.push(...await Promise.all(importPromises));
   }
   
@@ -165,7 +158,7 @@ export class SamerArtisan {
     const usedBaseSignatures: string[] = [];
     this.$resolvedCommands.forEach(command => {
       if(usedBaseSignatures.includes(command.base))
-        ConsoleIO.fail(`Signature "${command.base}" used in multiple commands.`);
+        throw new DuplicateSignatureException(command.base);
       usedBaseSignatures.push(command.base);
     });
   }
@@ -219,7 +212,7 @@ export class SamerArtisan {
     let command = this.$resolvedCommands.find(command => command.base === base)
       ?? await this.$suggestSimilars(base);
     if(!command)
-      ConsoleIO.fail("No Command Found", `(use "list" to display available commands)`);
+      throw new CommandNotExistsException;
     await this.exec(command, input);
   }
   
@@ -227,18 +220,25 @@ export class SamerArtisan {
    * Parse arguments and start cli
   */
   static async parse(args = process.argv) {
-    await Promise.all([
-      this.$resolveCommandsFromLoadedDirs(),
-      this.$resolveAddedCommands()
-    ]);
-    
-    this.$assertBaseSignaturesAreUnique();
-    const [baseInput, ...argsAndOpts] = args.splice(2);
-    if(baseInput && baseInput !== "--help" && baseInput !== "-h")
-      return await this.call(baseInput, argsAndOpts)
-    
-    this.$config.name && console.log(textSync(this.$config.name), "\n\n");
-    Command.showGlobalOptions();
-    await this.call("list");
+    try {
+      await Promise.all([
+        this.$resolveCommandsFromLoadedDirs(),
+        this.$resolveAddedCommands()
+      ]);
+      
+      this.$assertBaseSignaturesAreUnique();
+      const [baseInput, ...argsAndOpts] = args.splice(2);
+      if(baseInput && baseInput !== "--help" && baseInput !== "-h")
+        return await this.call(baseInput, argsAndOpts)
+      
+      this.$config.name && console.log(textSync(this.$config.name), "\n\n");
+      Command.showGlobalOptions();
+      await this.call("list");
+    }
+    catch(err) {
+      if(err instanceof ConsoleException)
+        return err.render();
+      throw err;
+    }
   }
 }
