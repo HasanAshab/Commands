@@ -1,5 +1,7 @@
 // @ts-nocheck
-import ConsoleIO from "../ConsoleIO";
+import TooManyArgumentsException from "../exceptions/TooManyArgumentsException";
+import TooFewArgumentsException from "../exceptions/TooFewArgumentsException";
+import UnknownOptionException from "../exceptions/UnknownOptionException";
 
 
 //helper function for parseing single signature
@@ -70,13 +72,13 @@ const addArgumentsValue = (obj, inputs) => {
       let i = 0;
       while (i < inputs.length && inputs[i] !== key) i++;
       if (i === inputs.length)
-        ConsoleIO.fail("Too Few Arguments.","(use -h for help)")
+        throw new TooFewArgumentsException
       obj[key].value = inputs.splice(i).slice(1);
     } else {
       if (inputs.length > 0) {
         obj[key].value = inputs.shift();
       } else if (!obj[key].isOptional) {
-        ConsoleIO.fail("Too Few Arguments.","(use -h for help)")
+        throw new TooFewArgumentsException
       }
     }
 
@@ -85,7 +87,7 @@ const addArgumentsValue = (obj, inputs) => {
   }
 
   if (inputs.length > 0)
-   ConsoleIO.fail("Too Many Arguments.", "(use -h for help)")
+    throw new TooManyArgumentsException;
 };
 
 const addOptionsValue = (obj, inputs) => {
@@ -119,7 +121,7 @@ const addOptionsValue = (obj, inputs) => {
   }
 
   if (inputs.length > 0)
-    ConsoleIO.fail("Unknown Option Specified.", "(use -h for help)");
+    throw new UnknownOptionException;
 };
 
 export function parseArguments(signature, inputs) {
