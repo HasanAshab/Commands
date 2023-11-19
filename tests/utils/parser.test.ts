@@ -1,6 +1,8 @@
 import { parseArguments, parseDescriptions } from '../../src/utils';
+import TooManyArgumentsException from "../../src/exceptions/TooManyArgumentsException";
+import TooFewArgumentsException from "../../src/exceptions/TooFewArgumentsException";
+import UnknownOptionException from "../../src/exceptions/UnknownOptionException";
 
-// Argument
 it('Should parse args', () => {
   const sign = '{a} {b}';
   const args = ['foo', 'bar'];
@@ -14,18 +16,6 @@ it('Should parse args', () => {
   expect(parseArguments(sign, args)).toEqual(result);
 });
 
-it('Should not throw error if an optional arg is not passed', () => {
-  const sign = '{a} {b?}';
-  const args = ['foo'];
-  const result = {
-    args: {
-      a: 'foo',
-      b: null,
-    },
-    opts: {},
-  };
-  expect(parseArguments(sign, args)).toEqual(result);
-});
 
 it('Optional arg value should be the default value if not provided', () => {
   const sign = '{a} {b=bar}';
@@ -40,14 +30,75 @@ it('Optional arg value should be the default value if not provided', () => {
   expect(parseArguments(sign, args)).toEqual(result);
 });
 
-it('Should throw error if args count does not satisfy the signature', () => {
+it('Should throw error if less arguments passed', () => {
+  const sign = '{a} {b}';
+  let args = ['foo'];
+  expect(() => parseArguments(sign, args)).toThrow(TooFewArgumentsException);
+});
+
+it('Should throw error if more arguments passed', () => {
   const sign = '{a} {b}';
   let args = ['foo', 'bar', 'baz'];
-
- // expect(() => parseArguments(sign, args)).toThrow(TooManyArguments);
-  args = ['foo'];
- // expect(() => parseArguments(sign, args)).toThrow(TooFewArguments);
+  expect(() => parseArguments(sign, args)).toThrow(TooManyArgumentsException);
 });
+
+
+it('Should not throw error if an optional arg is not passed', () => {
+  const sign = '{a} {b?}';
+  const args = ['foo'];
+  const result = {
+    args: {
+      a: 'foo',
+      b: null,
+    },
+    opts: {},
+  };
+  expect(parseArguments(sign, args)).toEqual(result);
+});
+
+it('Should not throw error if option is not passed', () => {
+  const sign = '{--foo}';
+  const args: string[] = [];
+  const result = {
+    args: {},
+    opts: { foo: false },
+  };
+  expect(parseArguments(sign, args)).toEqual(result);
+});
+
+it('Should throw error if unexpected option is passed', () => {
+  const sign = '{--foo}';
+  const args = ["--bar"];
+  expect(() => parseArguments(sign, args)).toThrow(UnknownOptionException);
+});
+
+it.only('Should throw error if input array value not passed', () => {
+  const sign = '{foo*}';
+  const args: string[] = [];
+  expect(() => parseArguments(sign, args)).toThrow(TooFewArgumentsException);
+});
+
+it.only('Should not throw error if at least one input array value passed', () => {
+  const sign = '{a*}';
+  const args: string[] = ["foo"];
+  const result = {
+    args: { a: ["foo"] },
+    opts: {},
+  };
+  expect(parseArguments(sign, args)).toEqual(result);
+});
+
+it.only('Should not throw error if more than one input array value passed', () => {
+  const sign = '{a*}';
+  const args: string[] = ["foo", "bar"];
+  const result = {
+    args: { a: ["foo", "bar"] },
+    opts: {},
+  };
+  expect(parseArguments(sign, args)).toEqual(result);
+});
+
+
 
 it('Should handle a combination of positional and optional arguments', () => {
   const sign = '{a} {b?} {c} {d?}';
@@ -141,10 +192,13 @@ it('Valued-option should be the default value if not provided', () => {
   expect(parseArguments(sign, args)).toEqual(result);
 });
 
-it('Should throw error if valued-option is provided but value not passed', () => {
+it('Should be empty string if valued-option is provided but value not passed', () => {
   const sign = '{--foo=}';
   const args = ['--foo='];
-  //expect(() => parseArguments(sign, args)).toThrow(TooFewArguments);
+  expect(parseArguments(sign, args)).toEqual({
+    args: {},
+    opts: { foo: "" }
+  });
 });
 
 it('Should pass value to valued-option with alias', () => {

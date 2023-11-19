@@ -3,7 +3,7 @@ import type { SamerArtisanConfig, GlobalOptions, CommandMetadata } from "../inte
 import chalk from "chalk";
 import { parseDescriptions } from "../utils";
 
-export abstract class Command<Arguments = Record<string, string | null>, Options = Record<string, boolean | string | null>> extends ConsoleIO {
+export abstract class Command<Arguments = Record<string, string | null | string[]>, Options = Record<string, boolean | string | null>> extends ConsoleIO {
   /**
    * Global options those are available across every command
   */
