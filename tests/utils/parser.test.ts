@@ -72,13 +72,13 @@ it('Should throw error if unexpected option is passed', () => {
   expect(() => parseArguments(sign, args)).toThrow(UnknownOptionException);
 });
 
-it.only('Should throw error if input array value not passed', () => {
+it('Should throw error if input array value not passed', () => {
   const sign = '{foo*}';
   const args: string[] = [];
   expect(() => parseArguments(sign, args)).toThrow(TooFewArgumentsException);
 });
 
-it.only('Should not throw error if at least one input array value passed', () => {
+it('Should not throw error if at least one input array value passed', () => {
   const sign = '{a*}';
   const args: string[] = ["foo"];
   const result = {
@@ -88,7 +88,7 @@ it.only('Should not throw error if at least one input array value passed', () =>
   expect(parseArguments(sign, args)).toEqual(result);
 });
 
-it.only('Should not throw error if more than one input array value passed', () => {
+it('Should not throw error if more than one input array value passed', () => {
   const sign = '{a*}';
   const args: string[] = ["foo", "bar"];
   const result = {
@@ -612,7 +612,7 @@ it('Should handle optional described option with a default value', () => {
   expect(result).toEqual(expected);
 });
 
-it.only('Should parse description', () => {
+it('Should parse description', () => {
   const signature = `test 
         { --a: option 1 }
         { --b=abc: option 2 }
