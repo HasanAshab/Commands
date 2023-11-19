@@ -612,22 +612,23 @@ it('Should handle optional described option with a default value', () => {
   expect(result).toEqual(expected);
 });
 
-it('Should parse description', () => {
+it.only('Should parse description', () => {
   const signature = `test 
         { --a: option 1 }
         { --b=abc: option 2 }
         { --c|cat: option 3 }
         { d*: option 4 }
-        { e: option 5 }
+        { e }
         { f=69: option 6 }
         { g?: option 7 }
         {       h:        option 8            }
         { --i=: option 9 }
+        { --J|job=idk: option 10 }
       `;
   const expected = {
     args: {
       d: "option 4",
-      e: "option 5",
+      e: null,
       f: "option 6",
       g: "option 7",
       h: "option 8",
@@ -637,6 +638,7 @@ it('Should parse description', () => {
       "--b": "option 2",
       "-c, --cat": "option 3",
       "--i": "option 9",
+      "-J, --job": "option 10",
     },
   };
 

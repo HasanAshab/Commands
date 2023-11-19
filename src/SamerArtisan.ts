@@ -213,6 +213,7 @@ export class SamerArtisan {
       ?? await this.$suggestSimilars(base);
     if(!command)
       throw new CommandNotExistsException;
+
     await this.exec(command, input);
   }
   
@@ -227,6 +228,7 @@ export class SamerArtisan {
       ]);
       
       this.$assertBaseSignaturesAreUnique();
+      
       const [baseInput, ...argsAndOpts] = args.splice(2);
       if(baseInput && baseInput !== "--help" && baseInput !== "-h")
         return await this.call(baseInput, argsAndOpts)

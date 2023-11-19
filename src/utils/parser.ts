@@ -139,6 +139,13 @@ export function parseArguments(signature, inputs) {
 };
 
 
+/**
+ * [WARNING]: it fails to parse this signature
+ * { --h|help: Get usage of the command } { --v|verbose: Get verbose output } { query } { replace? } { --D|dir=. }
+ * 
+ * The program never ends (may be for Infinite Loop)
+*/
+
 export function parseDescriptions(signature) {
   const args = {}
   const opts = {}

@@ -8,7 +8,7 @@ export abstract class Command<Arguments = Record<string, string | null | string[
    * Global options those are available across every command
   */
   static globalOptions = `
-    { --h|help: Show help of a command }
+    { --h|help: Get usage of the command }
     { --v|verbose: Get verbose output }
   `;
   
@@ -140,15 +140,15 @@ export abstract class Command<Arguments = Record<string, string | null | string[
     if(this.description) {
       console.log(`${chalk.yellow("Description")}:\n  ${this.description}\n`);
     }
+    
     const { args, opts } = parseDescriptions(Command.globalOptions + this.pattern) as any;
     if(args) {
       let argsList = "";
       let hasAtleastOneArgument = false;
       for(const name in args) {
+        hasAtleastOneArgument = true;
         const padding = ' '.repeat(20 - name.length);
         const description = args[name];
-        if(description)
-          hasAtleastOneArgument = true;
         argsList += `  ${chalk.green(name)}${padding}${description ?? ""}\n`;
       }
       hasAtleastOneArgument && console.log(`${chalk.yellow("Arguments")}:\n${argsList}`);
