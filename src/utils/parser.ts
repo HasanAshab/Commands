@@ -69,11 +69,9 @@ const parseSignature = (signature) => {
 const addArgumentsValue = (obj, inputs) => {
   for (const key in obj) {
     if (obj[key].isArrayType) {
-      let i = 0;
-      while (i < inputs.length && inputs[i] !== key) i++;
-      if (i === inputs.length)
+      obj[key].value = inputs.splice(0)
+      if (obj[key].value.length === 0)
         throw new TooFewArgumentsException
-      obj[key].value = inputs.splice(i).slice(1);
     } else {
       if (inputs.length > 0) {
         obj[key].value = inputs.shift();
@@ -166,7 +164,7 @@ export function parseDescriptions(signature) {
         
         else if (signature[i] === "*" || signature[i] === "=") {
           //skiping the unwanted values
-          while (signature[++i] !== ":") {}
+          while (++i < signature.length && signature[++i] !== ":") {}
           i--;
         } else if (signature[i] === '|') {
           shortKeys += `${key.slice(1)}, `;
