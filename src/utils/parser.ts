@@ -3,7 +3,6 @@ import TooManyArgumentsException from "../exceptions/TooManyArgumentsException";
 import TooFewArgumentsException from "../exceptions/TooFewArgumentsException";
 import UnknownOptionException from "../exceptions/UnknownOptionException";
 
-
 //helper function for parseing single signature
 const parseSingleSignature = (i, signature, args, opts) => {
   let key = '';
@@ -66,15 +65,15 @@ const parseSignature = (signature) => {
   return res;
 };
 
-const addArgumentsValue = (obj, inputs) => {
+const addArgumentsValue = (obj, argsInputs) => {
   for (const key in obj) {
     if (obj[key].isArrayType) {
-      obj[key].value = inputs.splice(0)
+      obj[key].value = argsInputs.splice(0)
       if (obj[key].value.length === 0)
         throw new TooFewArgumentsException
     } else {
-      if (inputs.length > 0) {
-        obj[key].value = inputs.shift();
+      if (argsInputs.length > 0) {
+        obj[key].value = argsInputs.shift();
       } else if (!obj[key].isOptional) {
         throw new TooFewArgumentsException
       }
@@ -84,65 +83,58 @@ const addArgumentsValue = (obj, inputs) => {
 
   }
 
-  if (inputs.length > 0)
-    throw new TooManyArgumentsException;
+
 };
 
-const addOptionsValue = (obj, inputs) => {
+const addOptionsValue = (obj, argsInputs, optsInputs) => {
   for (const key in obj) {
-    for (let i = 0; i < inputs.length; i++) {
-      const valIndex = inputs[i].indexOf('=');
-      if (
-        inputs[i].slice(2, valIndex === -1 ? inputs[i].length: valIndex) ===
-        key
-      ) {
-        if (obj[key].needsValue) {
-          obj[key].value = inputs[i].slice(valIndex + 1);
+    for (let i = 0; i < optsInputs.length; i++) {
+      const valIndex = optsInputs[i].indexOf('=') === -1 ? optsInputs[i].length: optsInputs[i].indexOf('=');
+      let value = undefined;
+      if (optsInputs[i].slice(2, valIndex) === key) {
+        value = optsInputs[i].slice(valIndex + 1);
+      } else if (optsInputs[i][1] === obj[key].shortKey) {
+        value = optsInputs[i].slice(2)
+      } else continue
+      if (obj[key].needsValue) {
+        if (value) {
+          obj[key].value = value
         } else {
-          obj[key].value = true;
+          if (argsInputs.length > 0)
+            obj[key].value = argsInputs.shift()
         }
-        //removing the passed argument
-        inputs.splice(i, 1);
-        break;
-      } else if (inputs[i][1] === obj[key].shortKey) {
-        if (obj[key].needsValue) {
-          obj[key].value = inputs[i].slice(2);
-        } else {
-          obj[key].value = true;
-        }
-        //removing the passed argument
-        inputs.splice(i, 1);
-        break;
+      } else {
+        obj[key].value = true;
       }
+      //removing the passed argument
+      optsInputs.splice(i, 1);
+      break;
     }
     obj[key] = obj[key].value
   }
 
-  if (inputs.length > 0)
-    throw new UnknownOptionException;
 };
+
+
 
 export function parseArguments(signature, inputs) {
   const res = parseSignature(signature);
-  addArgumentsValue(
-    res.args,
-    inputs.filter((item) => !item.startsWith('-'))
-  );
-  addOptionsValue(
-    res.opts,
-    inputs.filter((item) => item.startsWith('-'))
-  );
-
-  return res;
+  const argumentType = []
+  const optionType = []
+  //Deviding the 'Arguments' and 'Options' from the 'inputs'
+  for (const item of inputs) {
+    if (item[0] === '-') optionType.push(item)
+    else argumentType.push(item)
+  }
+  addArgumentsValue(res.args, argumentType);
+  addOptionsValue(res.opts, argumentType, optionType);
+  if (argumentType.length > 0)
+    throw new TooManyArgumentsException;
+  if (optionType.length > 0)
+    throw new UnknownOptionException;
+  return res
 };
 
-
-/**
- * [WARNING]: it fails to parse this signature
- * { --h|help: Get usage of the command } { --v|verbose: Get verbose output } { query } { replace? } { --D|dir=. }
- * 
- * The program never ends (may be for Infinite Loop)
-*/
 
 export function parseDescriptions(signature) {
   const args = {}
@@ -159,9 +151,9 @@ export function parseDescriptions(signature) {
       const validKeys = /[a-zA-Z1-9\-]/;
       //looping thought the current signature for parsing the argument
       while (i < signature.length && signature[i] !== '}') {
-        
+
         if (validKeys.test(signature[i])) key += signature[i];
-        
+
         else if (signature[i] === "*" || signature[i] === "=") {
           //skiping the unwanted values
           while (++i < signature.length && signature[++i] !== ":") {}
